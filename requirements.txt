@@ -1,0 +1,12 @@
+Django==1.9.7
+configparser==3.5.0
+djangorestframework==3.4.0
+pip==8.1.2
+setuptools==18.0.1
+wheel==0.24.0
+Pillow==3.3.0
+
+hg+https://bitbucket.org/wkornewald/django-nonrel
+hg+https://bitbucket.org/wkornewald/djangotoolbox
+git+https://github.com/django-nonrel/mongodb-engine
+

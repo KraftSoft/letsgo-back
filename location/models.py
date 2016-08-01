@@ -1,3 +1,6 @@
 from django.db import models
+from core.mixins import LocationMixin
 
-# Create your models here.
+
+class Subway(LocationMixin, models.Model):
+    name = models.CharField(max_length=64)
