@@ -1,13 +1,13 @@
 from django.conf.urls import patterns, include, url
-
 from django.contrib import admin
+from rest_framework.authtoken.views import obtain_auth_token
+
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    # Examples:
-    # url(r'^$', 'together.views.home', name='home'),
-    # url(r'^blog/', include('blog.urls')),
-
+    url(r'^', include('core.urls')),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework'))
+
+    # create user curl --data "username=<uname>&password=<pw>" http://site-name/api-token-auth/
+    url(r'^api-token-auth/', obtain_auth_token)
 )

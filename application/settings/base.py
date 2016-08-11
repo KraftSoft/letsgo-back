@@ -11,14 +11,14 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 import configparser
-from application.settings.secret import SECRET_KEY, DB_NAME, DB_PASSWORD, DB_USER
+from application.settings.secret import *
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
-CONFIG_PATH = os.environ['TOGETHER_CONF']
-
-config = configparser.ConfigParser()
-config.read(CONFIG_PATH, encoding='utf-8')
+# CONFIG_PATH = os.environ['TOGETHER_CONF']
+#
+# config = configparser.ConfigParser()
+# config.read(CONFIG_PATH, encoding='utf-8')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -29,6 +29,7 @@ TEMPLATE_DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
+AUTH_USER_MODEL = 'core.user'
 
 # Application definition
 
@@ -40,11 +41,21 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework.authtoken',
     'core',
     'location',
     'tags',
     'chat'
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    )
+}
 
 MIDDLEWARE_CLASSES = [
     'django.contrib.sessions.middleware.SessionMiddleware',
