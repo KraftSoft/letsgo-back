@@ -63,8 +63,11 @@ class GeneralPermissionMixin(object):
 class UserMixin(object):
     model = User
     serializer_class = UserSerializer
-    who_can_update = IsStaffOrTargetUser
     queryset = User.objects.all()
+
+    permission_classes = [
+        permissions.AllowAny
+    ]
 
 
 class AddMemberMixin(object):

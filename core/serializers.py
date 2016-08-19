@@ -1,5 +1,8 @@
 from rest_framework import serializers
 from rest_framework.serializers import raise_errors_on_nested_writes
+from rest_framework_gis.fields import GeometrySerializerMethodField
+from rest_framework_gis.serializers import GeoFeatureModelSerializer
+
 from core.models import User, Meeting
 
 
@@ -38,12 +41,19 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
-class MeetingSerializer(serializers.ModelSerializer):
+class MeetingSerializer(GeoFeatureModelSerializer):
+
+    def update(self, instance, validated_data):
+        pass
 
     members = UserSerializer(many=True, required=False)
     owner = UserSerializer(required=False)
 
-    UPDATE_AVAILABLE_FIELDS = ('title', 'description')
+    def get_coordinates(self, obj):
+        setattr(obj.coordinates, 'coordinates', [55.0, 77.0])
+        return obj.coordinates
+
+    UPDATE_AVAILABLE_FIELDS = ('title', 'description', 'coordinates')
 
     def create(self, validated_data):
         user = self.context['view'].request.user
@@ -51,6 +61,7 @@ class MeetingSerializer(serializers.ModelSerializer):
         meeting = Meeting.objects.create(
             title=validated_data['title'],
             description=validated_data['description'],
+            coordinates=validated_data['coordinates'],
             owner_id=user.id,
         )
         meeting.save()
@@ -59,6 +70,7 @@ class MeetingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
+        geo_field = 'coordinates'
         fields = ('title', 'description', 'owner', 'members')
 
 

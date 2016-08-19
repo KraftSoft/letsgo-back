@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from core.mixins import LocationMixin
 from location.models import Subway
+from django.contrib.gis.db import models as gis_models
 
 
 class User(AbstractUser):

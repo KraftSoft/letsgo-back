@@ -1,8 +1,12 @@
 from django.contrib.gis.db import models as gis_models
+from django.db import models
 
 
-class LocationMixin(object):
-    location = gis_models.PointField()
+class LocationMixin(models.Model):
+    coordinates = gis_models.PointField(null=True, blank=False)
+
+    class Meta:
+        abstract = True
 
 
 class WriteMixin(object):
