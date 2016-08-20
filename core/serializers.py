@@ -3,6 +3,7 @@ from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework_gis.fields import GeometrySerializerMethodField
 from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
+from core.mixins import LocationMixin
 from core.models import User, Meeting
 
 
@@ -41,17 +42,26 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
-class MeetingSerializer(GeoFeatureModelSerializer):
+class LocationSerializer(serializers.ModelSerializer):
+
+    def to_representation(self, instance):
+        return {
+            'lat': instance.coords[0],
+            'lng': instance.coords[1],
+        }
+
+    class Meta:
+        model = LocationMixin
+
+
+class MeetingSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         pass
 
     members = UserSerializer(many=True, required=False)
     owner = UserSerializer(required=False)
-
-    def get_coordinates(self, obj):
-        setattr(obj.coordinates, 'coordinates', [55.0, 77.0])
-        return obj.coordinates
+    coordinates = LocationSerializer(required=True)
 
     UPDATE_AVAILABLE_FIELDS = ('title', 'description', 'coordinates')
 
@@ -70,8 +80,7 @@ class MeetingSerializer(GeoFeatureModelSerializer):
 
     class Meta:
         model = Meeting
-        geo_field = 'coordinates'
-        fields = ('title', 'description', 'owner', 'members')
+        fields = ('title', 'description', 'owner', 'members', 'coordinates')
 
 
 class AddMeetingMemberSerializer(serializers.ModelSerializer):
