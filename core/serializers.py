@@ -1,7 +1,5 @@
 from rest_framework import serializers
 from rest_framework.serializers import raise_errors_on_nested_writes
-from rest_framework_gis.fields import GeometrySerializerMethodField
-from rest_framework_gis.serializers import GeoFeatureModelSerializer
 
 from core.mixins import LocationMixin
 from core.models import User, Meeting
