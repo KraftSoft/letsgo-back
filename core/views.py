@@ -96,7 +96,7 @@ class UserList(UserMixin, generics.ListCreateAPIView):
     pass
 
 
-class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestroyAPIView):
+class UserDetail(UserMixin, generics.RetrieveUpdateDestroyAPIView):
     pass
 
 

@@ -5,7 +5,7 @@ from core.views import UserList, UserDetail, MeetingsList, MeetingDetail, UserCr
 
 urlpatterns = patterns('',
 
-    url(r'^api-token-auth/', AuthView.as_view()),
+    url(r'^api-token-auth/', AuthView.as_view(), name='auth'),
     url(r'user-create/$', UserCreate.as_view(), name='user-create'),
     url(r'user-list/$', UserList.as_view(), name='users-list'),
     url(r'user-detail/(?P<pk>\d+)$', UserDetail.as_view(), name='user-detail'),
