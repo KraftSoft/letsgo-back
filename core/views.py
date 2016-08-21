@@ -87,9 +87,7 @@ class AddMemberMixin(object):
     serializer_class = AddMeetingMemberSerializer
     queryset = Meeting.objects.all()  # TODO remove queryset
 
-    permission_classes = [
-        permissions.IsAuthenticated
-    ]
+    who_can_update = IsAuthenticated
 
 
 class MeetingMixin(object):

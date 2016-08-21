@@ -1,4 +1,4 @@
-from django.conf.urls import patterns, include, url
+from django.conf.urls import patterns, url
 
 from core.views import UserList, UserDetail, MeetingsList, MeetingDetail, UserCreate, MeetingAddMember, Centrefugo, \
     AuthView
@@ -17,7 +17,7 @@ urlpatterns = patterns('',
     url(r'meeting-detail$', MeetingDetail.as_view(), name='meeting-detail'),
     url(r'meeting-detail/(?P<pk>\d+)/$', MeetingDetail.as_view(), name='meeting-detail'),
 
-    url(r'meeting-add-me/(?P<meeting_pk>\d+)/$', MeetingAddMember.as_view(), name='add-member'),
+    url(r'meeting-add-me/(?P<pk>\d+)/$', MeetingAddMember.as_view(), name='add-member'),
     url(r'centrifugo/$', Centrefugo.as_view(), name='centrifugo'),
 
 )

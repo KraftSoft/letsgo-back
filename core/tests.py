@@ -117,6 +117,23 @@ class MeetingTests(MeetingMixin, TestCase):
         data = response.data
         check_json(data, fields)
 
+    def test_add_to_meeting(self):
+        self.client.put(reverse('add-member', kwargs={'pk': self.test_meeting_1.pk}), content_type='application/json')
+
+        response = self.client.get(reverse('meeting-detail', kwargs={'pk': self.test_meeting_1.pk}))
+
+        data = response.data
+
+        self.assertTrue(isinstance(data, dict))
+        self.assertTrue('members' in data)
+
+        has_user = False
+        for member in data['members']:
+            if member['id'] == self.test_user.id:
+                has_user = True
+
+        self.assertTrue(has_user)
+
 
 class UpdateCases(AuthUserMixin, TransactionTestCase):
     NEW_USER_NAME = 'july'
