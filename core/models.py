@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from core.mixins import LocationMixin
 from location.models import Subway
+from django.contrib.gis.db import models as gis_models
 
 
 class User(AbstractUser):
@@ -9,12 +9,14 @@ class User(AbstractUser):
     about = models.CharField(max_length=256, blank=True)
 
 
-class Meeting(LocationMixin, models.Model):
+class Meeting(models.Model):
     title = models.CharField(max_length=32)
     description = models.TextField(blank=True)
     owner = models.ForeignKey(User, related_name='created_meetings', blank=True)
     members = models.ManyToManyField(User, related_name='favorite_meetings', blank=True)
     subway = models.ForeignKey(Subway, null=True, blank=True, related_name='meetings')
+
+    coordinates = gis_models.PointField(null=True, blank=False)
 
     date_create = models.DateTimeField(auto_now=True)
     last_modify = models.DateTimeField(auto_now_add=True)

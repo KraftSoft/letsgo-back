@@ -1,18 +1,36 @@
-from rest_framework import serializers
-from rest_framework.serializers import raise_errors_on_nested_writes
+from collections import OrderedDict
 
-from core.mixins import LocationMixin
+from django.contrib.gis.geos import Point
+from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from rest_framework.serializers import raise_errors_on_nested_writes
+from rest_framework.settings import api_settings
 from core.models import User, Meeting
 
 
-class UserSerializer(serializers.ModelSerializer):
+class SmartUpdaterMixin(object):
+
+    UPDATE_AVAILABLE_FIELDS = tuple()
+
+    def update(self, instance, validated_data):
+        raise_errors_on_nested_writes('update', self, validated_data)
+
+        for attr, value in validated_data.items():
+            if attr in self.UPDATE_AVAILABLE_FIELDS:
+                setattr(instance, attr, value)
+
+        instance.save()
+
+        return instance
+
+
+class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('first_name', 'about', 'username')
 
     class Meta:
         model = User
         fields = ('id', 'first_name', 'about', 'password', 'username')
-        #write_only_fields = ('password', )
 
         extra_kwargs = {
             'password': {'write_only': True, 'required': False}
@@ -28,19 +46,40 @@ class UserSerializer(serializers.ModelSerializer):
 
         return user
 
-    def update(self, instance, validated_data):
-        raise_errors_on_nested_writes('update', self, validated_data)
 
-        for attr, value in validated_data.items():
-            if attr in self.UPDATE_AVAILABLE_FIELDS:
-                setattr(instance, attr, value)
+class LocationSerializer(serializers.Field):
 
-        instance.save()
+    def validate_coordinates(self, coordinates):
+        if not isinstance(coordinates, dict):
+            raise ValidationError('Invalid request data: coordinates must be an object instance')
 
-        return instance
+        if not 'lat' in coordinates or not 'lng' in coordinates:
+            raise ValidationError('Invalid request data: coordinates must contains "lat" and "lng" values')
 
+        try:
+            float(coordinates['lat'])
+            float(coordinates['lng'])
+        except (ValueError, TypeError):
+            raise ValidationError('Invalid request data: coordinates must contains "lat" and "lng" values')
 
-class LocationSerializer(serializers.ModelSerializer):
+    def to_internal_value(self, data):
+
+        if not isinstance(data, dict):
+            message = self.error_messages['invalid'].format(
+                datatype=type(data).__name__
+            )
+            raise ValidationError({
+                api_settings.NON_FIELD_ERRORS_KEY: [message]
+            })
+
+        errors = OrderedDict()
+
+        try:
+            self.validate_coordinates(data)
+        except ValidationError as e:
+            errors['coordinates'] = e.detail
+
+        return Point(float(data['lat']), float(data['lng']))
 
     def to_representation(self, instance):
         return {
@@ -48,22 +87,24 @@ class LocationSerializer(serializers.ModelSerializer):
             'lng': instance.coords[1],
         }
 
-    class Meta:
-        model = LocationMixin
 
-
-class MeetingSerializer(serializers.ModelSerializer):
-
-    def update(self, instance, validated_data):
-        pass
-
-    members = UserSerializer(many=True, required=False)
-    owner = UserSerializer(required=False)
-    coordinates = LocationSerializer(required=True)
+class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('title', 'description', 'coordinates')
 
+    members = UserSerializer(many=True, required=False)
+    owner = UserSerializer(required=False)
+
+    coordinates = LocationSerializer(read_only=False)
+
+    def serialize_coordinates(self, instance):
+        return {
+            'lat': instance.coordinates.coords[0],
+            'lng': instance.coordinates.coords[1],
+        }
+
     def create(self, validated_data):
+
         user = self.context['view'].request.user
 
         meeting = Meeting.objects.create(
@@ -78,7 +119,7 @@ class MeetingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ('title', 'description', 'owner', 'members', 'coordinates')
+        fields = ('id', 'title', 'description', 'owner', 'members', 'coordinates', 'subway')
 
 
 class AddMeetingMemberSerializer(serializers.ModelSerializer):

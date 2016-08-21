@@ -7,7 +7,7 @@ from django.views.generic import TemplateView
 from rest_framework import generics, permissions
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
-from rest_framework.permissions import IsAdminUser, AllowAny, BasePermission
+from rest_framework.permissions import IsAdminUser, BasePermission, IsAuthenticated
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
 
@@ -50,14 +50,28 @@ class IsStaffOrOwner(BasePermission):
         return super().has_permission(request, view)
 
 
+class IsStaffOrMe(BasePermission):
+    def has_permission(self, request, view):
+        me = view.model
+        if request.user.pk == me.pk:
+            return True
+        return super().has_permission(request, view)
+
+
 class GeneralPermissionMixin(object):
     def get_permissions(self):
+
         if self.request.method == 'DELETE':
             return [IsAdminUser()]
-        elif self.request.method == 'POST':
-            return [AllowAny()]
+
+        elif self.request.method == 'GET':  # only authorized users can see objects
+            return [IsAuthenticated()]
+
+        elif self.request.method == 'POST':  # only authorized users can create objects
+            return [IsAuthenticated()]
+
         else:
-            return [self.who_can_update()]
+            return [self.who_can_update()]  # only owners can update objects
 
 
 class UserMixin(object):
@@ -65,9 +79,7 @@ class UserMixin(object):
     serializer_class = UserSerializer
     queryset = User.objects.all()
 
-    permission_classes = [
-        permissions.AllowAny
-    ]
+    who_can_update = IsStaffOrMe
 
 
 class AddMemberMixin(object):
@@ -76,7 +88,7 @@ class AddMemberMixin(object):
     queryset = Meeting.objects.all()  # TODO remove queryset
 
     permission_classes = [
-        permissions.AllowAny
+        permissions.IsAuthenticated
     ]
 
 
@@ -96,11 +108,11 @@ class UserList(UserMixin, generics.ListCreateAPIView):
     pass
 
 
-class UserDetail(UserMixin, generics.RetrieveUpdateDestroyAPIView):
+class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestroyAPIView):
     pass
 
 
-class MeetingsList(MeetingMixin, generics.ListCreateAPIView):
+class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         return super().post(request, *args, **kwargs)
 
@@ -110,7 +122,7 @@ class MeetingDetail(GeneralPermissionMixin, MeetingMixin, generics.RetrieveUpdat
 
 
 # TODO lost only update view
-class MeetingAddMember(AddMemberMixin, generics.RetrieveUpdateAPIView):
+class MeetingAddMember(GeneralPermissionMixin, AddMemberMixin, generics.RetrieveUpdateAPIView):
     pass
 
 
