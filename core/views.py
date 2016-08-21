@@ -1,10 +1,9 @@
 import hmac
 import time
 from hashlib import sha256
-
 import six
 from django.views.generic import TemplateView
-from rest_framework import generics, permissions
+from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAdminUser, BasePermission, IsAuthenticated
@@ -44,8 +43,14 @@ class IsStaffOrTargetUser(IsStaff):
 
 class IsStaffOrOwner(BasePermission):
     def has_permission(self, request, view):
-        owner = view.model.owner
-        if request.user.pk == owner.pk:
+        object_model = view.model
+
+        try:
+            model = object_model.objects.get(pk=view.kwargs['pk'])
+        except object_model.DoesNotExist:
+            return False
+
+        if request.user.pk == model.owner.pk:
             return True
         return super().has_permission(request, view)
 

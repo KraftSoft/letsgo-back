@@ -135,22 +135,23 @@ class MeetingTests(MeetingMixin, TestCase):
         self.assertTrue(has_user)
 
 
-class UpdateCases(AuthUserMixin, TransactionTestCase):
-    NEW_USER_NAME = 'july'
-    NEW_ABOUT = 'bla bla bla'
-    NEW_FN = 'Юля'
+class UpdateCases(MeetingMixin, TransactionTestCase):
 
     def setUp(self):
         super().setUp()
-        self.client = Client()
 
     def test_update_user(self):
+
+        NEW_USER_NAME = 'july'
+        NEW_ABOUT = 'bla bla bla'
+        NEW_FN = 'Юля'
+
         response = self.client.put(
             reverse('user-detail', kwargs={'pk': self.test_user.pk}),
             json.dumps({
-                'username': self.NEW_USER_NAME,
-                'about': self.NEW_ABOUT,
-                'first_name': self.NEW_FN
+                'username': NEW_USER_NAME,
+                'about': NEW_ABOUT,
+                'first_name': NEW_FN
             }),
             content_type='application/json',
         )
@@ -159,6 +160,42 @@ class UpdateCases(AuthUserMixin, TransactionTestCase):
 
         check_json(response.data, fields)
 
-        self.assertEqual(response.data['username'], self.NEW_USER_NAME)
-        self.assertEqual(response.data['first_name'], self.NEW_FN)
-        self.assertEqual(response.data['about'], self.NEW_ABOUT)
+        self.assertEqual(response.data['username'], NEW_USER_NAME)
+        self.assertEqual(response.data['first_name'], NEW_FN)
+        self.assertEqual(response.data['about'], NEW_ABOUT)
+
+    def test_update_meeting(self):
+        NEW_MEET_TITLE = 'New meeting title'
+        NEW_MEET_DESC = 'New meeting desc'
+
+        LUBERTSY_LAT = 55.688713
+        LUBERTSY_LNG = 37.901073
+
+        coords = {
+            'lat': LUBERTSY_LAT,
+            'lng': LUBERTSY_LNG
+        }
+
+        response = self.client.put(
+            reverse('meeting-detail', kwargs={'pk': self.test_meeting_1.pk}),
+            json.dumps({
+                'title': NEW_MEET_TITLE,
+                'description': NEW_MEET_DESC,
+                'coordinates': coords
+            }),
+            content_type='application/json',
+        )
+
+        data = response.data
+
+        fields = ('id', 'title', 'description', 'coordinates', 'owner', 'members')
+
+        check_json(data, fields)
+
+        self.assertEqual(data['title'], NEW_MEET_TITLE)
+        self.assertEqual(data['description'], NEW_MEET_DESC)
+
+        self.assertTrue(isinstance(data['coordinates'], dict))
+
+        self.assertEqual(data['coordinates']['lat'], LUBERTSY_LAT)
+        self.assertEqual(data['coordinates']['lng'], LUBERTSY_LNG)
