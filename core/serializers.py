@@ -3,6 +3,7 @@ from collections import OrderedDict
 from django.contrib.gis.geos import Point
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.settings import api_settings
 from core.models import User, Meeting
@@ -28,9 +29,19 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('first_name', 'about', 'username')
 
+    #TODO return avatar
+    avatar = SerializerMethodField()
+
+    def get_avatar(self, obj):
+        # TODO remove try-except, it is only for demo
+        try:
+            return obj.avatar.url
+        except ValueError:
+            return ''
+
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'about', 'password', 'username')
+        fields = ('id', 'first_name', 'about', 'password', 'username', 'avatar')
 
         extra_kwargs = {
             'password': {'write_only': True, 'required': False}
@@ -92,7 +103,6 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('title', 'description', 'coordinates')
 
-    members = UserSerializer(many=True, required=False)
     owner = UserSerializer(required=False)
 
     coordinates = LocationSerializer(read_only=False)
@@ -119,19 +129,4 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ('id', 'title', 'description', 'owner', 'members', 'coordinates', 'subway')
-
-
-class AddMeetingMemberSerializer(serializers.ModelSerializer):
-
-    def update(self, instance, validated_data):
-        raise_errors_on_nested_writes('update', self, validated_data)
-        user = self.context['view'].request.user
-
-        instance.members.add(user.id)
-
-        return instance
-
-    class Meta:
-        model = Meeting
-        fields = ('id', )
+        fields = ('id', 'title', 'description', 'owner', 'coordinates', 'subway')

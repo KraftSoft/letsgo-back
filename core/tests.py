@@ -84,7 +84,7 @@ class MeetingTests(MeetingMixin, TestCase):
 
         self.assertTrue(isinstance(response.data, list), msg='Data: {}'.format(response.data))
 
-        fields = ('id', 'title', 'description', 'owner', 'subway')
+        fields = ('id', 'title', 'description', 'owner')
         check_json(response.data[0], fields)
 
     def test_meeting_detail(self):
@@ -116,23 +116,6 @@ class MeetingTests(MeetingMixin, TestCase):
 
         data = response.data
         check_json(data, fields)
-
-    def test_add_to_meeting(self):
-        self.client.put(reverse('add-member', kwargs={'pk': self.test_meeting_1.pk}), content_type='application/json')
-
-        response = self.client.get(reverse('meeting-detail', kwargs={'pk': self.test_meeting_1.pk}))
-
-        data = response.data
-
-        self.assertTrue(isinstance(data, dict))
-        self.assertTrue('members' in data)
-
-        has_user = False
-        for member in data['members']:
-            if member['id'] == self.test_user.id:
-                has_user = True
-
-        self.assertTrue(has_user)
 
 
 class UpdateCases(MeetingMixin, TransactionTestCase):
@@ -188,7 +171,7 @@ class UpdateCases(MeetingMixin, TransactionTestCase):
 
         data = response.data
 
-        fields = ('id', 'title', 'description', 'coordinates', 'owner', 'members')
+        fields = ('id', 'title', 'description', 'coordinates', 'owner')
 
         check_json(data, fields)
 

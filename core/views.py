@@ -1,8 +1,3 @@
-import hmac
-import time
-from hashlib import sha256
-import six
-from django.views.generic import TemplateView
 from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
@@ -11,9 +6,7 @@ from rest_framework.reverse import reverse
 from rest_framework.response import Response
 
 from core.models import User, Meeting
-from core.serializers import UserSerializer, MeetingSerializer, AddMeetingMemberSerializer
-
-from django.conf import settings
+from core.serializers import UserSerializer, MeetingSerializer
 
 
 @api_view(['GET'])
@@ -87,14 +80,6 @@ class UserMixin(object):
     who_can_update = IsStaffOrMe
 
 
-class AddMemberMixin(object):
-    model = Meeting
-    serializer_class = AddMeetingMemberSerializer
-    queryset = Meeting.objects.all()  # TODO remove queryset
-
-    who_can_update = IsAuthenticated
-
-
 class MeetingMixin(object):
     model = Meeting
     serializer_class = MeetingSerializer
@@ -122,30 +107,6 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
 
 class MeetingDetail(GeneralPermissionMixin, MeetingMixin, generics.RetrieveUpdateAPIView):
     pass
-
-
-# TODO lost only update view
-class MeetingAddMember(GeneralPermissionMixin, AddMemberMixin, generics.RetrieveUpdateAPIView):
-    pass
-
-
-class Centrefugo(TemplateView):
-    template_name = 'centrifugo.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['timestamp'] = str(int(time.time()))
-
-        def generate_token(secret, user, timestamp, info=""):
-            sign = hmac.new(six.b(secret), digestmod=sha256)
-            sign.update(six.b(user))
-            sign.update(six.b(timestamp))
-            sign.update(six.b(info))
-            return sign.hexdigest()
-
-        context['token'] = generate_token(settings.CENTRIFUGO_KEY, "1", context['timestamp'])
-
-        return context
 
 
 class AuthView(ObtainAuthToken):

@@ -6,10 +6,10 @@ from django.conf import settings
 
 admin.autodiscover()
 
-urlpatterns = patterns('',
+urlpatterns = [
     url(r'^', include('core.urls')),
     url(r'^admin/', include(admin.site.urls)),
 
     # create user: $ curl --data "username=<uname>&password=<pw>" http://site-name/api-token-auth/
     url(r'^api-token-auth/', obtain_auth_token)
-) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
