@@ -1,0 +1,1552 @@
+--
+-- PostgreSQL database dump
+--
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SET check_function_bodies = false;
+SET client_min_messages = warning;
+
+--
+-- Name: plpgsql; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS plpgsql WITH SCHEMA pg_catalog;
+
+
+--
+-- Name: EXTENSION plpgsql; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION plpgsql IS 'PL/pgSQL procedural language';
+
+
+--
+-- Name: postgis; Type: EXTENSION; Schema: -; Owner: 
+--
+
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION postgis; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION postgis IS 'PostGIS geometry, geography, and raster spatial types and functions';
+
+
+SET search_path = public, pg_catalog;
+
+SET default_tablespace = '';
+
+SET default_with_oids = false;
+
+--
+-- Name: auth_group; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE auth_group (
+    id integer NOT NULL,
+    name character varying(80) NOT NULL
+);
+
+
+ALTER TABLE public.auth_group OWNER TO kic;
+
+--
+-- Name: auth_group_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE auth_group_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.auth_group_id_seq OWNER TO kic;
+
+--
+-- Name: auth_group_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE auth_group_id_seq OWNED BY auth_group.id;
+
+
+--
+-- Name: auth_group_permissions; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE auth_group_permissions (
+    id integer NOT NULL,
+    group_id integer NOT NULL,
+    permission_id integer NOT NULL
+);
+
+
+ALTER TABLE public.auth_group_permissions OWNER TO kic;
+
+--
+-- Name: auth_group_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE auth_group_permissions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.auth_group_permissions_id_seq OWNER TO kic;
+
+--
+-- Name: auth_group_permissions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE auth_group_permissions_id_seq OWNED BY auth_group_permissions.id;
+
+
+--
+-- Name: auth_permission; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE auth_permission (
+    id integer NOT NULL,
+    name character varying(255) NOT NULL,
+    content_type_id integer NOT NULL,
+    codename character varying(100) NOT NULL
+);
+
+
+ALTER TABLE public.auth_permission OWNER TO kic;
+
+--
+-- Name: auth_permission_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE auth_permission_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.auth_permission_id_seq OWNER TO kic;
+
+--
+-- Name: auth_permission_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE auth_permission_id_seq OWNED BY auth_permission.id;
+
+
+--
+-- Name: authtoken_token; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE authtoken_token (
+    key character varying(40) NOT NULL,
+    created timestamp with time zone NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.authtoken_token OWNER TO kic;
+
+--
+-- Name: chat_chat; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE chat_chat (
+    id integer NOT NULL,
+    title character varying(32) NOT NULL
+);
+
+
+ALTER TABLE public.chat_chat OWNER TO kic;
+
+--
+-- Name: chat_chat_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE chat_chat_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.chat_chat_id_seq OWNER TO kic;
+
+--
+-- Name: chat_chat_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE chat_chat_id_seq OWNED BY chat_chat.id;
+
+
+--
+-- Name: chat_chat_users; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE chat_chat_users (
+    id integer NOT NULL,
+    chat_id integer NOT NULL,
+    user_id integer NOT NULL
+);
+
+
+ALTER TABLE public.chat_chat_users OWNER TO kic;
+
+--
+-- Name: chat_chat_users_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE chat_chat_users_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.chat_chat_users_id_seq OWNER TO kic;
+
+--
+-- Name: chat_chat_users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE chat_chat_users_id_seq OWNED BY chat_chat_users.id;
+
+
+--
+-- Name: chat_message; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE chat_message (
+    id integer NOT NULL,
+    text text NOT NULL,
+    date_create timestamp with time zone NOT NULL,
+    author_id integer NOT NULL,
+    chat_id integer NOT NULL
+);
+
+
+ALTER TABLE public.chat_message OWNER TO kic;
+
+--
+-- Name: chat_message_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE chat_message_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.chat_message_id_seq OWNER TO kic;
+
+--
+-- Name: chat_message_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE chat_message_id_seq OWNED BY chat_message.id;
+
+
+--
+-- Name: core_meeting; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE core_meeting (
+    id integer NOT NULL,
+    coordinates geometry(Point,4326),
+    title character varying(32) NOT NULL,
+    description text NOT NULL,
+    date_create timestamp with time zone NOT NULL,
+    last_modify timestamp with time zone NOT NULL,
+    owner_id integer NOT NULL,
+    subway_id integer
+);
+
+
+ALTER TABLE public.core_meeting OWNER TO kic;
+
+--
+-- Name: core_meeting_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE core_meeting_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.core_meeting_id_seq OWNER TO kic;
+
+--
+-- Name: core_meeting_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE core_meeting_id_seq OWNED BY core_meeting.id;
+
+
+--
+-- Name: core_user; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE core_user (
+    id integer NOT NULL,
+    password character varying(128) NOT NULL,
+    last_login timestamp with time zone,
+    is_superuser boolean NOT NULL,
+    username character varying(30) NOT NULL,
+    first_name character varying(30) NOT NULL,
+    last_name character varying(30) NOT NULL,
+    email character varying(254) NOT NULL,
+    is_staff boolean NOT NULL,
+    is_active boolean NOT NULL,
+    date_joined timestamp with time zone NOT NULL,
+    avatar character varying(100),
+    about character varying(256) NOT NULL
+);
+
+
+ALTER TABLE public.core_user OWNER TO kic;
+
+--
+-- Name: core_user_groups; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE core_user_groups (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    group_id integer NOT NULL
+);
+
+
+ALTER TABLE public.core_user_groups OWNER TO kic;
+
+--
+-- Name: core_user_groups_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE core_user_groups_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.core_user_groups_id_seq OWNER TO kic;
+
+--
+-- Name: core_user_groups_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE core_user_groups_id_seq OWNED BY core_user_groups.id;
+
+
+--
+-- Name: core_user_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE core_user_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.core_user_id_seq OWNER TO kic;
+
+--
+-- Name: core_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE core_user_id_seq OWNED BY core_user.id;
+
+
+--
+-- Name: core_user_user_permissions; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE core_user_user_permissions (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    permission_id integer NOT NULL
+);
+
+
+ALTER TABLE public.core_user_user_permissions OWNER TO kic;
+
+--
+-- Name: core_user_user_permissions_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE core_user_user_permissions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.core_user_user_permissions_id_seq OWNER TO kic;
+
+--
+-- Name: core_user_user_permissions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE core_user_user_permissions_id_seq OWNED BY core_user_user_permissions.id;
+
+
+--
+-- Name: django_admin_log; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE django_admin_log (
+    id integer NOT NULL,
+    action_time timestamp with time zone NOT NULL,
+    object_id text,
+    object_repr character varying(200) NOT NULL,
+    action_flag smallint NOT NULL,
+    change_message text NOT NULL,
+    content_type_id integer,
+    user_id integer NOT NULL,
+    CONSTRAINT django_admin_log_action_flag_check CHECK ((action_flag >= 0))
+);
+
+
+ALTER TABLE public.django_admin_log OWNER TO kic;
+
+--
+-- Name: django_admin_log_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE django_admin_log_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.django_admin_log_id_seq OWNER TO kic;
+
+--
+-- Name: django_admin_log_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE django_admin_log_id_seq OWNED BY django_admin_log.id;
+
+
+--
+-- Name: django_content_type; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE django_content_type (
+    id integer NOT NULL,
+    app_label character varying(100) NOT NULL,
+    model character varying(100) NOT NULL
+);
+
+
+ALTER TABLE public.django_content_type OWNER TO kic;
+
+--
+-- Name: django_content_type_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE django_content_type_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.django_content_type_id_seq OWNER TO kic;
+
+--
+-- Name: django_content_type_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE django_content_type_id_seq OWNED BY django_content_type.id;
+
+
+--
+-- Name: django_migrations; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE django_migrations (
+    id integer NOT NULL,
+    app character varying(255) NOT NULL,
+    name character varying(255) NOT NULL,
+    applied timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.django_migrations OWNER TO kic;
+
+--
+-- Name: django_migrations_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE django_migrations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.django_migrations_id_seq OWNER TO kic;
+
+--
+-- Name: django_migrations_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE django_migrations_id_seq OWNED BY django_migrations.id;
+
+
+--
+-- Name: django_session; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE django_session (
+    session_key character varying(40) NOT NULL,
+    session_data text NOT NULL,
+    expire_date timestamp with time zone NOT NULL
+);
+
+
+ALTER TABLE public.django_session OWNER TO kic;
+
+--
+-- Name: location_subway; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE location_subway (
+    id integer NOT NULL,
+    name character varying(64) NOT NULL
+);
+
+
+ALTER TABLE public.location_subway OWNER TO kic;
+
+--
+-- Name: location_subway_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE location_subway_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.location_subway_id_seq OWNER TO kic;
+
+--
+-- Name: location_subway_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE location_subway_id_seq OWNED BY location_subway.id;
+
+
+--
+-- Name: tags_taggeditem; Type: TABLE; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE TABLE tags_taggeditem (
+    id integer NOT NULL,
+    word character varying(32) NOT NULL,
+    object_id integer NOT NULL,
+    content_type_id integer NOT NULL,
+    CONSTRAINT tags_taggeditem_object_id_check CHECK ((object_id >= 0))
+);
+
+
+ALTER TABLE public.tags_taggeditem OWNER TO kic;
+
+--
+-- Name: tags_taggeditem_id_seq; Type: SEQUENCE; Schema: public; Owner: kic
+--
+
+CREATE SEQUENCE tags_taggeditem_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.tags_taggeditem_id_seq OWNER TO kic;
+
+--
+-- Name: tags_taggeditem_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: kic
+--
+
+ALTER SEQUENCE tags_taggeditem_id_seq OWNED BY tags_taggeditem.id;
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY auth_group ALTER COLUMN id SET DEFAULT nextval('auth_group_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY auth_group_permissions ALTER COLUMN id SET DEFAULT nextval('auth_group_permissions_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY auth_permission ALTER COLUMN id SET DEFAULT nextval('auth_permission_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY chat_chat ALTER COLUMN id SET DEFAULT nextval('chat_chat_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY chat_chat_users ALTER COLUMN id SET DEFAULT nextval('chat_chat_users_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY chat_message ALTER COLUMN id SET DEFAULT nextval('chat_message_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY core_meeting ALTER COLUMN id SET DEFAULT nextval('core_meeting_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY core_user ALTER COLUMN id SET DEFAULT nextval('core_user_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY core_user_groups ALTER COLUMN id SET DEFAULT nextval('core_user_groups_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY core_user_user_permissions ALTER COLUMN id SET DEFAULT nextval('core_user_user_permissions_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY django_admin_log ALTER COLUMN id SET DEFAULT nextval('django_admin_log_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY django_content_type ALTER COLUMN id SET DEFAULT nextval('django_content_type_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY django_migrations ALTER COLUMN id SET DEFAULT nextval('django_migrations_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY location_subway ALTER COLUMN id SET DEFAULT nextval('location_subway_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY tags_taggeditem ALTER COLUMN id SET DEFAULT nextval('tags_taggeditem_id_seq'::regclass);
+
+
+--
+-- Data for Name: auth_group; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY auth_group (id, name) FROM stdin;
+\.
+
+
+--
+-- Name: auth_group_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('auth_group_id_seq', 1, false);
+
+
+--
+-- Data for Name: auth_group_permissions; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY auth_group_permissions (id, group_id, permission_id) FROM stdin;
+\.
+
+
+--
+-- Name: auth_group_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('auth_group_permissions_id_seq', 1, false);
+
+
+--
+-- Data for Name: auth_permission; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
+1	Can add log entry	1	add_logentry
+2	Can change log entry	1	change_logentry
+3	Can delete log entry	1	delete_logentry
+4	Can add permission	2	add_permission
+5	Can change permission	2	change_permission
+6	Can delete permission	2	delete_permission
+7	Can add group	3	add_group
+8	Can change group	3	change_group
+9	Can delete group	3	delete_group
+10	Can add content type	4	add_contenttype
+11	Can change content type	4	change_contenttype
+12	Can delete content type	4	delete_contenttype
+13	Can add session	5	add_session
+14	Can change session	5	change_session
+15	Can delete session	5	delete_session
+16	Can add Token	6	add_token
+17	Can change Token	6	change_token
+18	Can delete Token	6	delete_token
+19	Can add user	7	add_user
+20	Can change user	7	change_user
+21	Can delete user	7	delete_user
+22	Can add meeting	8	add_meeting
+23	Can change meeting	8	change_meeting
+24	Can delete meeting	8	delete_meeting
+25	Can add subway	9	add_subway
+26	Can change subway	9	change_subway
+27	Can delete subway	9	delete_subway
+28	Can add tagged item	10	add_taggeditem
+29	Can change tagged item	10	change_taggeditem
+30	Can delete tagged item	10	delete_taggeditem
+31	Can add chat	11	add_chat
+32	Can change chat	11	change_chat
+33	Can delete chat	11	delete_chat
+34	Can add message	12	add_message
+35	Can change message	12	change_message
+36	Can delete message	12	delete_message
+\.
+
+
+--
+-- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('auth_permission_id_seq', 36, true);
+
+
+--
+-- Data for Name: authtoken_token; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY authtoken_token (key, created, user_id) FROM stdin;
+163df7faa712e242f7e6b4d270e29401e604b9b2	2016-08-20 00:31:23.639446+03	1
+ee6d9b6dcdb03b6d7666c4cc14be644272e8c150	2016-08-20 01:41:40.484237+03	2
+\.
+
+
+--
+-- Data for Name: chat_chat; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY chat_chat (id, title) FROM stdin;
+\.
+
+
+--
+-- Name: chat_chat_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('chat_chat_id_seq', 1, false);
+
+
+--
+-- Data for Name: chat_chat_users; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY chat_chat_users (id, chat_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: chat_chat_users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('chat_chat_users_id_seq', 1, false);
+
+
+--
+-- Data for Name: chat_message; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY chat_message (id, text, date_create, author_id, chat_id) FROM stdin;
+\.
+
+
+--
+-- Name: chat_message_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('chat_message_id_seq', 1, false);
+
+
+--
+-- Data for Name: core_meeting; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY core_meeting (id, coordinates, title, description, date_create, last_modify, owner_id, subway_id) FROM stdin;
+5	0101000020E61000006BF12900C6E54B40CFA3E2FF8ED64240	t1	d1	2017-01-07 19:22:51.842354+03	2016-08-21 02:14:52.480319+03	2	\N
+4	0101000020E61000008330B77BB9E94B40126C5CFFAEC54240	t1	d1	2017-01-07 19:25:08.249806+03	2016-08-21 02:13:39.187697+03	2	\N
+3	0101000020E61000009B559FABADDE4B408F352383DCBD4240	Catch pokemons together	CAtch	2017-01-07 19:27:49.1894+03	2016-08-20 01:33:30.876183+03	1	\N
+6	0101000020E61000006BF12900C6E54B40CFA3E2FF8ED64240	t1	d1	2017-01-07 19:29:10.571782+03	2016-08-21 02:31:34.131869+03	2	\N
+1	0101000020E61000001EA67D737FE14B403A5CAB3DECCF4240	Catch pokemons together	CAtch	2017-01-07 19:29:57.78446+03	2016-08-20 00:40:52.921945+03	1	\N
+\.
+
+
+--
+-- Name: core_meeting_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('core_meeting_id_seq', 6, true);
+
+
+--
+-- Data for Name: core_user; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY core_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined, avatar, about) FROM stdin;
+1	pbkdf2_sha256$24000$ao6mnp5UdrrQ$bq03rdZeRrQMp//OvDEwzskcJZMc1bW93HkYxNurxwg=	\N	f	kic				f	t	2016-08-20 00:30:59.479484+03	https://pp.vk.me/c837420/v837420379/86d1/KWkq1NfQyNs.jpg	
+2	pbkdf2_sha256$24000$dCrFk7zO4nUp$t5EZnEzbnTT1yWfjRPwtlTH1JpNxyAJ+sPEZR6q9Fes=	\N	f	qq				f	t	2016-08-20 01:41:29.40239+03	https://pp.vk.me/c837339/v837339379/7b0c/slDNvsJMG00.jpg	
+3	pbkdf2_sha256$24000$GBjPM81XwulF$juI+TvC44E1240/8nSHZc+6o1vspmTQrG3mjgA2vCs4=	\N	f	ww				f	t	2016-08-20 20:01:03.332453+03	https://pp.vk.me/c837420/v837420379/869b/X83aImUJoEY.jpg	
+\.
+
+
+--
+-- Data for Name: core_user_groups; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY core_user_groups (id, user_id, group_id) FROM stdin;
+\.
+
+
+--
+-- Name: core_user_groups_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('core_user_groups_id_seq', 1, false);
+
+
+--
+-- Name: core_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('core_user_id_seq', 3, true);
+
+
+--
+-- Data for Name: core_user_user_permissions; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY core_user_user_permissions (id, user_id, permission_id) FROM stdin;
+\.
+
+
+--
+-- Name: core_user_user_permissions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('core_user_user_permissions_id_seq', 1, false);
+
+
+--
+-- Data for Name: django_admin_log; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY django_admin_log (id, action_time, object_id, object_repr, action_flag, change_message, content_type_id, user_id) FROM stdin;
+\.
+
+
+--
+-- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('django_admin_log_id_seq', 1, false);
+
+
+--
+-- Data for Name: django_content_type; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY django_content_type (id, app_label, model) FROM stdin;
+1	admin	logentry
+2	auth	permission
+3	auth	group
+4	contenttypes	contenttype
+5	sessions	session
+6	authtoken	token
+7	core	user
+8	core	meeting
+9	location	subway
+10	tags	taggeditem
+11	chat	chat
+12	chat	message
+\.
+
+
+--
+-- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('django_content_type_id_seq', 12, true);
+
+
+--
+-- Data for Name: django_migrations; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY django_migrations (id, app, name, applied) FROM stdin;
+1	location	0001_initial	2016-08-20 00:12:31.875391+03
+2	contenttypes	0001_initial	2016-08-20 00:12:32.097919+03
+3	contenttypes	0002_remove_content_type_name	2016-08-20 00:12:32.130858+03
+4	auth	0001_initial	2016-08-20 00:12:32.743456+03
+5	auth	0002_alter_permission_name_max_length	2016-08-20 00:12:32.764867+03
+6	auth	0003_alter_user_email_max_length	2016-08-20 00:12:32.788021+03
+7	auth	0004_alter_user_username_opts	2016-08-20 00:12:32.807416+03
+8	auth	0005_alter_user_last_login_null	2016-08-20 00:12:32.8305+03
+9	auth	0006_require_contenttypes_0002	2016-08-20 00:12:32.842716+03
+10	auth	0007_alter_validators_add_error_messages	2016-08-20 00:12:32.863641+03
+11	core	0001_initial	2016-08-20 00:12:33.990531+03
+12	admin	0001_initial	2016-08-20 00:12:34.256428+03
+13	admin	0002_logentry_remove_auto_add	2016-08-20 00:12:34.301033+03
+14	admin	0003_auto_20160819_2108	2016-08-20 00:12:34.434236+03
+15	authtoken	0001_initial	2016-08-20 00:12:34.668428+03
+16	authtoken	0002_auto_20160226_1747	2016-08-20 00:12:34.790619+03
+17	authtoken	0003_auto_20160819_2108	2016-08-20 00:12:34.856656+03
+18	chat	0001_initial	2016-08-20 00:12:35.104807+03
+19	chat	0002_auto_20160819_2108	2016-08-20 00:12:35.70551+03
+20	sessions	0001_initial	2016-08-20 00:12:35.961263+03
+21	tags	0001_initial	2016-08-20 00:12:36.11754+03
+22	core	0002_remove_meeting_members	2017-01-28 19:04:51.533637+03
+23	location	0002_remove_subway_coordinates	2017-01-28 19:04:51.75636+03
+\.
+
+
+--
+-- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('django_migrations_id_seq', 23, true);
+
+
+--
+-- Data for Name: django_session; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY django_session (session_key, session_data, expire_date) FROM stdin;
+\.
+
+
+--
+-- Data for Name: location_subway; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY location_subway (id, name) FROM stdin;
+\.
+
+
+--
+-- Name: location_subway_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('location_subway_id_seq', 1, false);
+
+
+--
+-- Data for Name: spatial_ref_sys; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY spatial_ref_sys  FROM stdin;
+\.
+
+
+--
+-- Data for Name: tags_taggeditem; Type: TABLE DATA; Schema: public; Owner: kic
+--
+
+COPY tags_taggeditem (id, word, object_id, content_type_id) FROM stdin;
+\.
+
+
+--
+-- Name: tags_taggeditem_id_seq; Type: SEQUENCE SET; Schema: public; Owner: kic
+--
+
+SELECT pg_catalog.setval('tags_taggeditem_id_seq', 1, false);
+
+
+--
+-- Name: auth_group_name_key; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY auth_group
+    ADD CONSTRAINT auth_group_name_key UNIQUE (name);
+
+
+--
+-- Name: auth_group_permissions_group_id_0cd325b0_uniq; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY auth_group_permissions
+    ADD CONSTRAINT auth_group_permissions_group_id_0cd325b0_uniq UNIQUE (group_id, permission_id);
+
+
+--
+-- Name: auth_group_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY auth_group_permissions
+    ADD CONSTRAINT auth_group_permissions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: auth_group_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY auth_group
+    ADD CONSTRAINT auth_group_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: auth_permission_content_type_id_01ab375a_uniq; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY auth_permission
+    ADD CONSTRAINT auth_permission_content_type_id_01ab375a_uniq UNIQUE (content_type_id, codename);
+
+
+--
+-- Name: auth_permission_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY auth_permission
+    ADD CONSTRAINT auth_permission_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: authtoken_token_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY authtoken_token
+    ADD CONSTRAINT authtoken_token_pkey PRIMARY KEY (key);
+
+
+--
+-- Name: authtoken_token_user_id_key; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY authtoken_token
+    ADD CONSTRAINT authtoken_token_user_id_key UNIQUE (user_id);
+
+
+--
+-- Name: chat_chat_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY chat_chat
+    ADD CONSTRAINT chat_chat_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: chat_chat_users_chat_id_dfd3d335_uniq; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY chat_chat_users
+    ADD CONSTRAINT chat_chat_users_chat_id_dfd3d335_uniq UNIQUE (chat_id, user_id);
+
+
+--
+-- Name: chat_chat_users_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY chat_chat_users
+    ADD CONSTRAINT chat_chat_users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: chat_message_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY chat_message
+    ADD CONSTRAINT chat_message_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: core_meeting_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY core_meeting
+    ADD CONSTRAINT core_meeting_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: core_user_groups_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY core_user_groups
+    ADD CONSTRAINT core_user_groups_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: core_user_groups_user_id_c82fcad1_uniq; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY core_user_groups
+    ADD CONSTRAINT core_user_groups_user_id_c82fcad1_uniq UNIQUE (user_id, group_id);
+
+
+--
+-- Name: core_user_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY core_user
+    ADD CONSTRAINT core_user_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: core_user_user_permissions_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY core_user_user_permissions
+    ADD CONSTRAINT core_user_user_permissions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: core_user_user_permissions_user_id_73ea0daa_uniq; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY core_user_user_permissions
+    ADD CONSTRAINT core_user_user_permissions_user_id_73ea0daa_uniq UNIQUE (user_id, permission_id);
+
+
+--
+-- Name: core_user_username_key; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY core_user
+    ADD CONSTRAINT core_user_username_key UNIQUE (username);
+
+
+--
+-- Name: django_admin_log_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY django_admin_log
+    ADD CONSTRAINT django_admin_log_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: django_content_type_app_label_76bd3d3b_uniq; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY django_content_type
+    ADD CONSTRAINT django_content_type_app_label_76bd3d3b_uniq UNIQUE (app_label, model);
+
+
+--
+-- Name: django_content_type_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY django_content_type
+    ADD CONSTRAINT django_content_type_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: django_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY django_migrations
+    ADD CONSTRAINT django_migrations_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: django_session_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY django_session
+    ADD CONSTRAINT django_session_pkey PRIMARY KEY (session_key);
+
+
+--
+-- Name: location_subway_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY location_subway
+    ADD CONSTRAINT location_subway_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tags_taggeditem_pkey; Type: CONSTRAINT; Schema: public; Owner: kic; Tablespace: 
+--
+
+ALTER TABLE ONLY tags_taggeditem
+    ADD CONSTRAINT tags_taggeditem_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: auth_group_name_a6ea08ec_like; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX auth_group_name_a6ea08ec_like ON auth_group USING btree (name varchar_pattern_ops);
+
+
+--
+-- Name: auth_group_permissions_0e939a4f; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX auth_group_permissions_0e939a4f ON auth_group_permissions USING btree (group_id);
+
+
+--
+-- Name: auth_group_permissions_8373b171; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX auth_group_permissions_8373b171 ON auth_group_permissions USING btree (permission_id);
+
+
+--
+-- Name: auth_permission_417f1b1c; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX auth_permission_417f1b1c ON auth_permission USING btree (content_type_id);
+
+
+--
+-- Name: authtoken_token_key_10f0b77e_like; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX authtoken_token_key_10f0b77e_like ON authtoken_token USING btree (key varchar_pattern_ops);
+
+
+--
+-- Name: chat_chat_users_b79bfa8f; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX chat_chat_users_b79bfa8f ON chat_chat_users USING btree (chat_id);
+
+
+--
+-- Name: chat_chat_users_e8701ad4; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX chat_chat_users_e8701ad4 ON chat_chat_users USING btree (user_id);
+
+
+--
+-- Name: chat_message_4f331e2f; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX chat_message_4f331e2f ON chat_message USING btree (author_id);
+
+
+--
+-- Name: chat_message_b79bfa8f; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX chat_message_b79bfa8f ON chat_message USING btree (chat_id);
+
+
+--
+-- Name: core_meeting_5e7b1936; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX core_meeting_5e7b1936 ON core_meeting USING btree (owner_id);
+
+
+--
+-- Name: core_meeting_ab59f07f; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX core_meeting_ab59f07f ON core_meeting USING btree (subway_id);
+
+
+--
+-- Name: core_meeting_coordinates_id; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX core_meeting_coordinates_id ON core_meeting USING gist (coordinates);
+
+
+--
+-- Name: core_user_groups_0e939a4f; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX core_user_groups_0e939a4f ON core_user_groups USING btree (group_id);
+
+
+--
+-- Name: core_user_groups_e8701ad4; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX core_user_groups_e8701ad4 ON core_user_groups USING btree (user_id);
+
+
+--
+-- Name: core_user_user_permissions_8373b171; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX core_user_user_permissions_8373b171 ON core_user_user_permissions USING btree (permission_id);
+
+
+--
+-- Name: core_user_user_permissions_e8701ad4; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX core_user_user_permissions_e8701ad4 ON core_user_user_permissions USING btree (user_id);
+
+
+--
+-- Name: core_user_username_36e4f7f7_like; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX core_user_username_36e4f7f7_like ON core_user USING btree (username varchar_pattern_ops);
+
+
+--
+-- Name: django_admin_log_417f1b1c; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX django_admin_log_417f1b1c ON django_admin_log USING btree (content_type_id);
+
+
+--
+-- Name: django_admin_log_e8701ad4; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX django_admin_log_e8701ad4 ON django_admin_log USING btree (user_id);
+
+
+--
+-- Name: django_session_de54fa62; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX django_session_de54fa62 ON django_session USING btree (expire_date);
+
+
+--
+-- Name: django_session_session_key_c0390e0f_like; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX django_session_session_key_c0390e0f_like ON django_session USING btree (session_key varchar_pattern_ops);
+
+
+--
+-- Name: tags_taggeditem_417f1b1c; Type: INDEX; Schema: public; Owner: kic; Tablespace: 
+--
+
+CREATE INDEX tags_taggeditem_417f1b1c ON tags_taggeditem USING btree (content_type_id);
+
+
+--
+-- Name: auth_group_permiss_permission_id_84c5c92e_fk_auth_permission_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY auth_group_permissions
+    ADD CONSTRAINT auth_group_permiss_permission_id_84c5c92e_fk_auth_permission_id FOREIGN KEY (permission_id) REFERENCES auth_permission(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: auth_group_permissions_group_id_b120cbf9_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY auth_group_permissions
+    ADD CONSTRAINT auth_group_permissions_group_id_b120cbf9_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: auth_permiss_content_type_id_2f476e4b_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY auth_permission
+    ADD CONSTRAINT auth_permiss_content_type_id_2f476e4b_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: authtoken_token_user_id_35299eff_fk_core_user_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY authtoken_token
+    ADD CONSTRAINT authtoken_token_user_id_35299eff_fk_core_user_id FOREIGN KEY (user_id) REFERENCES core_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: chat_chat_users_chat_id_d52bf378_fk_chat_chat_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY chat_chat_users
+    ADD CONSTRAINT chat_chat_users_chat_id_d52bf378_fk_chat_chat_id FOREIGN KEY (chat_id) REFERENCES chat_chat(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: chat_chat_users_user_id_4126ebf1_fk_core_user_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY chat_chat_users
+    ADD CONSTRAINT chat_chat_users_user_id_4126ebf1_fk_core_user_id FOREIGN KEY (user_id) REFERENCES core_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: chat_message_author_id_923569d5_fk_core_user_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY chat_message
+    ADD CONSTRAINT chat_message_author_id_923569d5_fk_core_user_id FOREIGN KEY (author_id) REFERENCES core_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: chat_message_chat_id_21483fa7_fk_chat_chat_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY chat_message
+    ADD CONSTRAINT chat_message_chat_id_21483fa7_fk_chat_chat_id FOREIGN KEY (chat_id) REFERENCES chat_chat(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: core_meeting_owner_id_47e7daa0_fk_core_user_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY core_meeting
+    ADD CONSTRAINT core_meeting_owner_id_47e7daa0_fk_core_user_id FOREIGN KEY (owner_id) REFERENCES core_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: core_meeting_subway_id_7c87ad6f_fk_location_subway_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY core_meeting
+    ADD CONSTRAINT core_meeting_subway_id_7c87ad6f_fk_location_subway_id FOREIGN KEY (subway_id) REFERENCES location_subway(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: core_user_groups_group_id_fe8c697f_fk_auth_group_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY core_user_groups
+    ADD CONSTRAINT core_user_groups_group_id_fe8c697f_fk_auth_group_id FOREIGN KEY (group_id) REFERENCES auth_group(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: core_user_groups_user_id_70b4d9b8_fk_core_user_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY core_user_groups
+    ADD CONSTRAINT core_user_groups_user_id_70b4d9b8_fk_core_user_id FOREIGN KEY (user_id) REFERENCES core_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: core_user_user_per_permission_id_35ccf601_fk_auth_permission_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY core_user_user_permissions
+    ADD CONSTRAINT core_user_user_per_permission_id_35ccf601_fk_auth_permission_id FOREIGN KEY (permission_id) REFERENCES auth_permission(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: core_user_user_permissions_user_id_085123d3_fk_core_user_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY core_user_user_permissions
+    ADD CONSTRAINT core_user_user_permissions_user_id_085123d3_fk_core_user_id FOREIGN KEY (user_id) REFERENCES core_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: django_admin_content_type_id_c4bce8eb_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY django_admin_log
+    ADD CONSTRAINT django_admin_content_type_id_c4bce8eb_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: django_admin_log_user_id_c564eba6_fk_core_user_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY django_admin_log
+    ADD CONSTRAINT django_admin_log_user_id_c564eba6_fk_core_user_id FOREIGN KEY (user_id) REFERENCES core_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: tags_taggedi_content_type_id_03c84c71_fk_django_content_type_id; Type: FK CONSTRAINT; Schema: public; Owner: kic
+--
+
+ALTER TABLE ONLY tags_taggeditem
+    ADD CONSTRAINT tags_taggedi_content_type_id_03c84c71_fk_django_content_type_id FOREIGN KEY (content_type_id) REFERENCES django_content_type(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: public; Type: ACL; Schema: -; Owner: postgres
+--
+
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM postgres;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO PUBLIC;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
