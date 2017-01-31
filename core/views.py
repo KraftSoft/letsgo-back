@@ -36,11 +36,15 @@ class IsStaffOrTargetUser(IsStaff):
 
 class IsStaffOrOwner(BasePermission):
     def has_permission(self, request, view):
+
+        if request.user.is_anonymous():
+            return False
+
         object_model = view.model
 
         try:
             model = object_model.objects.get(pk=view.kwargs['pk'])
-        except object_model.DoesNotExist:
+        except (object_model.DoesNotExist, KeyError):
             return False
 
         if request.user.pk == model.owner.pk:
