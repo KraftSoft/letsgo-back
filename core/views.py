@@ -1,6 +1,7 @@
 import magic
 import re
-from django.conf import settings
+
+from django.db import DatabaseError
 from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
@@ -13,9 +14,13 @@ from rest_framework.views import APIView
 from django.core.files.storage import default_storage
 
 from core.exceptions import UploadException
-from core.models import User, Meeting
+from core.models import User, Meeting, UserPhotos
 from core.serializers import UserSerializer, MeetingSerializer, JsonResponseSerializer
 from core.utils import JsonResponse
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(['GET'])
@@ -131,6 +136,8 @@ class FileUploadView(APIView):
     parser_classes = (FileUploadParser,)
     serializer_class = JsonResponseSerializer
 
+    url_prefix = 'user-photos'
+
     def validate_request(self):
         if 'file' not in self.request.data:
             raise UploadException(response=JsonResponse(status=400, msg='error: no file in request'))
@@ -142,7 +149,13 @@ class FileUploadView(APIView):
             raise UploadException(response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
 
     def save_file(self, filename, file_obj):
-        default_storage.save(filename, file_obj)
+        default_storage.save('{0}/{1}'.format(self.url_prefix, filename), file_obj)
+        full_path = default_storage.url('1.png')
+
+        try:
+            UserPhotos.objects.create(user=self.request.user, photo=full_path)
+        except DatabaseError:
+            logger.error('Can not save photo for user_id={0}, photo_path: {1}'.format(self.request.user.id, full_path))
 
     def put(self, request, filename, format=None):
 
@@ -158,6 +171,6 @@ class FileUploadView(APIView):
             self.save_file(filename, file_obj)
 
         except UploadException as e:
-            return Response(JsonResponseSerializer(e.response).data)
+            return Response(self.serializer_class(e.response).data)
 
-        return Response(JsonResponseSerializer(JsonResponse(status=204, msg='ok')).data)
+        return Response(self.serializer_class(JsonResponse(status=204, msg='ok')).data)

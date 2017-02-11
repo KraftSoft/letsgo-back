@@ -23,5 +23,5 @@ class Meeting(models.Model):
 
 class UserPhotos(models.Model):
     user = models.ForeignKey(User, related_name='photos')
-    photo = models.ImageField(null=True, blank=True)
+    photo = models.URLField(null=True, blank=True)
     is_avatar = models.BooleanField(default=False)
