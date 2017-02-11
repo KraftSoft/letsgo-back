@@ -18,8 +18,8 @@ apt-get install postgresql-9.4-postgis-2.1
 
 pip3 install -r requirements.txt
 
-psql postgres -c "CREATE USER kic WITH PASSWORD '0';"
+psql postgres -c "CREATE USER w3data WITH PASSWORD '0';"
 psql postgres -c "CREATE DATABASE together_db;"
-psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE together_db to kic;"
-psql postgres -c "ALTER USER kic SUPERUSER;"
+psql postgres -c "GRANT ALL PRIVILEGES ON DATABASE together_db to w3data;"
+psql postgres -c "ALTER USER w3data SUPERUSER;"
 psql postgres -c "CREATE EXTENSION postgis;"

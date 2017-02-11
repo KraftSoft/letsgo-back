@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.settings import api_settings
-from core.models import User, Meeting
+from core.models import User, Meeting, UserPhotos
 from core.utils import reverse_full
 
 
@@ -63,7 +63,16 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
         return user
 
 
+class UserPhotoSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserPhotos
+        fields = ('photo', )
+
+
 class UserSerializerExtended(UserSerializer):
+    photos = UserPhotoSerializer(many=True)
+
     class Meta:
         model = User
         fields = ('id', 'first_name', 'about', 'password', 'username', 'avatar', 'photos', 'href')
