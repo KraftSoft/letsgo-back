@@ -29,6 +29,9 @@ TEMPLATE_DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
+BASE_DOMAIN = '185.76.147.143'
+BASE_SCHEMA = 'http'
+
 AUTH_USER_MODEL = 'core.user'
 
 # Application definition
@@ -122,6 +125,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
 STATIC_URL = '/static/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, "../uploads")
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "../static"),

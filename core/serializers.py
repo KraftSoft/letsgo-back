@@ -7,6 +7,7 @@ from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.settings import api_settings
 from core.models import User, Meeting
+from core.utils import reverse_full
 
 
 class SmartUpdaterMixin(object):
@@ -31,17 +32,21 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     #TODO return avatar
     avatar = SerializerMethodField()
+    href = SerializerMethodField()
 
     def get_avatar(self, obj):
         # TODO remove try-except, it is only for demo
         try:
-            return obj.avatar.url
+            return obj.get_avatar()
         except ValueError:
             return ''
 
+    def get_href(self, obj):
+        return reverse_full('user-detail', kwargs={'pk': obj.id})
+
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'about', 'password', 'username', 'avatar')
+        fields = ('id', 'first_name', 'about', 'password', 'username', 'avatar', 'href')
 
         extra_kwargs = {
             'password': {'write_only': True, 'required': False}
@@ -56,6 +61,16 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
         user.save()
 
         return user
+
+
+class UserSerializerExtended(UserSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'first_name', 'about', 'password', 'username', 'avatar', 'photos', 'href')
+
+        extra_kwargs = {
+            'password': {'write_only': True, 'required': False}
+        }
 
 
 class LocationSerializer(serializers.Field):
@@ -103,7 +118,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('title', 'description', 'coordinates')
 
-    owner = UserSerializer(required=False)
+    owner = UserSerializerExtended(required=False)
 
     coordinates = LocationSerializer(read_only=False)
 
@@ -130,3 +145,14 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
     class Meta:
         model = Meeting
         fields = ('id', 'title', 'description', 'owner', 'coordinates', 'subway')
+
+
+class ResponseSerializer(serializers.Serializer):
+    def update(self, instance, validated_data):
+        pass
+
+    def create(self, validated_data):
+        pass
+
+    status = serializers.IntegerField()
+    msg = serializers.CharField(max_length=512)
