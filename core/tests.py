@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 
 from PIL import Image
@@ -203,3 +204,5 @@ class UploadPhotoTest(AuthUserMixin, TestCase):
 
         data = response.data
         self.assertEqual(data['status'], 204)
+
+        os.remove(file_name)
