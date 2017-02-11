@@ -7,12 +7,6 @@ class JsonResponse(object):
         self.status = status
         self.msg = msg
 
-    def serialize(self):
-        return {
-            'status': self.status,
-            'msg': self.msg
-        }
-
 
 def reverse_full(slug, *args, **kwargs):
 

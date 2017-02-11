@@ -14,7 +14,8 @@ from django.core.files.storage import default_storage
 
 from core.exceptions import UploadException
 from core.models import User, Meeting
-from core.serializers import UserSerializer, MeetingSerializer
+from core.serializers import UserSerializer, MeetingSerializer, JsonResponseSerializer
+from core.utils import JsonResponse
 
 
 @api_view(['GET'])
@@ -126,17 +127,19 @@ class AuthView(ObtainAuthToken):
 
 
 class FileUploadView(APIView):
+
     parser_classes = (FileUploadParser,)
+    serializer_class = JsonResponseSerializer
 
     def validate_request(self):
         if 'file' not in self.request.data:
-            raise UploadException(response=Response(status=400, data={'error': 'No file in request'}))
+            raise UploadException(response=JsonResponse(status=400, msg='error: no file in request'))
 
     def check_mime_type(self, file_obj):
         mime_type = magic.from_buffer(file_obj.read(), mime=True)
 
         if not re.match('image/', mime_type):
-            raise UploadException(response=Response(status=400, data={'error': 'Wrong file mime type'}))
+            raise UploadException(response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
 
     def save_file(self, filename, file_obj):
         default_storage.save(filename, file_obj)
@@ -155,6 +158,6 @@ class FileUploadView(APIView):
             self.save_file(filename, file_obj)
 
         except UploadException as e:
-            return e.response.serialize()
+            return Response(JsonResponseSerializer(e.response).data)
 
-        return Response(status=204).serialize()
+        return Response(JsonResponseSerializer(JsonResponse(status=204, msg='ok')).data)

@@ -147,7 +147,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
         fields = ('id', 'title', 'description', 'owner', 'coordinates', 'subway')
 
 
-class ResponseSerializer(serializers.Serializer):
+class JsonResponseSerializer(serializers.Serializer):
     def update(self, instance, validated_data):
         pass
 

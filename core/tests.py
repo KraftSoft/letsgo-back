@@ -1,11 +1,17 @@
+from unittest.mock import patch
+
+from PIL import Image
 from django.core.urlresolvers import reverse
 from django.test import TestCase, TransactionTestCase
 from django.test import Client
+import mock
+
 from core.models import User, Meeting
 from rest_framework.authtoken.models import Token
 from django.contrib.gis.geos import Point
 import json
 
+from core.views import FileUploadView
 
 TEST_USER_1 = 'masha'
 TEST_USER_PW_1 = '0'
@@ -182,3 +188,18 @@ class UpdateCases(MeetingMixin, TransactionTestCase):
 
         self.assertEqual(data['coordinates']['lat'], LUBERTSY_LAT)
         self.assertEqual(data['coordinates']['lng'], LUBERTSY_LNG)
+
+
+class UploadPhotoTest(AuthUserMixin, TestCase):
+    def test_upload__ok(self):
+
+        file_name = 'test.jpeg'
+
+        image = Image.new('RGBA', size=(50, 50), color=(150, 150, 0))
+        image.save(file_name)
+
+        with patch.object(FileUploadView, 'check_mime_type', return_value=None):
+            response = self.client.put(reverse('upload-photo', kwargs={'filename': file_name}), data=image, content_type='image/jpeg')
+
+        data = response.data
+        self.assertEqual(data['status'], 204)
