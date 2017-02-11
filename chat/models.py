@@ -12,4 +12,3 @@ class Message(models.Model):
     author = models.ForeignKey(User)
     text = models.TextField()
     date_create = models.DateTimeField(auto_now=True)
-

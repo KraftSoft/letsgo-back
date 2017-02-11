@@ -30,7 +30,7 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('first_name', 'about', 'username')
 
-    #TODO return avatar
+    # TODO return avatar
     avatar = SerializerMethodField()
     href = SerializerMethodField()
 
@@ -79,7 +79,7 @@ class LocationSerializer(serializers.Field):
         if not isinstance(coordinates, dict):
             raise ValidationError('Invalid request data: coordinates must be an object instance')
 
-        if not 'lat' in coordinates or not 'lng' in coordinates:
+        if 'lat' not in coordinates or 'lng' not in coordinates:
             raise ValidationError('Invalid request data: coordinates must contains "lat" and "lng" values')
 
         try:

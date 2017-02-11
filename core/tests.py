@@ -5,7 +5,6 @@ from PIL import Image
 from django.core.urlresolvers import reverse
 from django.test import TestCase, TransactionTestCase
 from django.test import Client
-import mock
 
 from core.models import User, Meeting
 from rest_framework.authtoken.models import Token
@@ -52,11 +51,15 @@ class MeetingMixin(AuthUserMixin):
         super().setUp()
 
         point = Point(55.751244, 37.618423)  # Moscow
-        self.test_meeting_1 = Meeting.objects.create(title=MEETING_TITLE_1, description=MEETING_DESC_1, owner=self.test_user,
-                                                   coordinates=point)
+        self.test_meeting_1 = Meeting.objects.create(title=MEETING_TITLE_1,
+                                                     description=MEETING_DESC_1,
+                                                     owner=self.test_user,
+                                                     coordinates=point)
 
-        self.test_meeting_2 = Meeting.objects.create(title=MEETING_TITLE_2, description=MEETING_DESC_2, owner=self.test_user,
-                                                   coordinates=point)
+        self.test_meeting_2 = Meeting.objects.create(title=MEETING_TITLE_2,
+                                                     description=MEETING_DESC_2,
+                                                     owner=self.test_user,
+                                                     coordinates=point)
 
 
 class UserTests(AuthUserMixin, TestCase):

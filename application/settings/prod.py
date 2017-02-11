@@ -1,4 +1,4 @@
-from application.settings.base import *
+from application.settings.base import * # NOQA
 
 DEBUG = False
 TEMPLATE_DEBUG = False
