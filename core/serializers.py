@@ -7,7 +7,7 @@ from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.settings import api_settings
 from core.models import User, Meeting, UserPhotos
-from core.utils import reverse_full
+from core.utils import reverse_full, build_absolute_url
 
 
 class SmartUpdaterMixin(object):
@@ -64,6 +64,10 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
 
 class UserPhotoSerializer(serializers.ModelSerializer):
+    photo = serializers.SerializerMethodField()
+
+    def get_photo(self, obj):
+        return build_absolute_url(obj.photo)
 
     class Meta:
         model = UserPhotos
