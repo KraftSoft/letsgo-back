@@ -19,16 +19,16 @@ TEST_USER_PW_1 = '0'
 TEST_USER_2 = 'katya'
 TEST_USER_PW_2 = '0'
 
-MEETING_TITLE_1 = 'go drink'
-MEETING_DESC_1 = 'Party for everybody :)'
+MEETING_TITLE_1 = 'go drink 1'
+MEETING_DESC_1 = 'Party for everybody :) 1'
 
-MEETING_TITLE_2 = 'go drink'
-MEETING_DESC_2 = 'Party for everybody :)'
+MEETING_TITLE_2 = 'go drink 2'
+MEETING_DESC_2 = 'Party for everybody :) 2'
 
 
 def check_json(data, fields):
     for field in fields:
-        assert field in data, 'Field "{}" is not returned in response\nResponse data: {}'.format(field, data)
+        assert field in data, 'Field "{0}" is not returned in response\nResponse data: {1}'.format(field, data)
 
 
 class AuthUserMixin(object):

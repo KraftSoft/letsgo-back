@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+
+from core.utils import build_absolute_url
 from location.models import Subway
 from django.contrib.gis.db import models as gis_models
 
@@ -8,7 +10,16 @@ class User(AbstractUser):
     about = models.CharField(max_length=256, blank=True)
 
     def get_avatar(self):
-        return self.photos.filter(is_avatar=True).first()
+
+        obj = self.photos.filter(is_avatar=True).first()
+
+        if not obj:
+            return ''
+
+        if not obj.photo:
+            return ''
+
+        return build_absolute_url(obj.photo)
 
 
 class Meeting(models.Model):

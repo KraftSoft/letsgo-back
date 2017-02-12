@@ -11,12 +11,12 @@ from rest_framework.reverse import reverse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from django.core.files.storage import default_storage
-
 from core.exceptions import UploadException
 from core.models import User, Meeting, UserPhotos
-from core.serializers import UserSerializer, MeetingSerializer, JsonResponseSerializer
+from core.serializers import MeetingSerializer, JsonResponseSerializer, UserSerializerExtended
 from core.utils import JsonResponse
+
+from django.core.files.storage import default_storage
 
 import logging
 
@@ -92,7 +92,7 @@ class GeneralPermissionMixin(object):
 
 class UserMixin(object):
     model = User
-    serializer_class = UserSerializer
+    serializer_class = UserSerializerExtended
     queryset = User.objects.all()
 
     who_can_update = IsStaffOrMe
@@ -138,6 +138,8 @@ class FileUploadView(APIView):
 
     url_prefix = 'user-photos'
 
+    storage = default_storage
+
     def validate_request(self):
         if 'file' not in self.request.data:
             raise UploadException(response=JsonResponse(status=400, msg='error: no file in request'))
@@ -149,11 +151,16 @@ class FileUploadView(APIView):
             raise UploadException(response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
 
     def save_file(self, filename, file_obj):
-        default_storage.save('{0}/{1}'.format(self.url_prefix, filename), file_obj)
-        full_path = default_storage.url('1.png')
+
+        self.storage.save('{0}/{1}'.format(self.url_prefix, filename), file_obj)
+        full_path = self.storage.url('1.png')
 
         try:
-            UserPhotos.objects.create(user=self.request.user, photo=full_path)
+            if self.request.GET.get('is_avatar'):
+                UserPhotos.objects.filter(user=self.request.user, is_avatar=True).update(is_avatar=False)
+                UserPhotos.objects.create(user=self.request.user, photo=full_path, is_avatar=True)
+            else:
+                UserPhotos.objects.create(user=self.request.user, photo=full_path)
         except DatabaseError:
             logger.error('Can not save photo for user_id={0}, photo_path: {1}'.format(self.request.user.id, full_path))
 

@@ -30,16 +30,11 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('first_name', 'about', 'username')
 
-    # TODO return avatar
     avatar = SerializerMethodField()
     href = SerializerMethodField()
 
     def get_avatar(self, obj):
-        # TODO remove try-except, it is only for demo
-        try:
-            return obj.get_avatar()
-        except ValueError:
-            return ''
+        return obj.get_avatar()
 
     def get_href(self, obj):
         return reverse_full('user-detail', kwargs={'pk': obj.id})
@@ -49,7 +44,9 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
         fields = ('id', 'first_name', 'about', 'password', 'username', 'avatar', 'href')
 
         extra_kwargs = {
-            'password': {'write_only': True, 'required': False}
+            'password': {'write_only': True, 'required': False},
+            'avatar': {'required': False},
+            'photos': {'required': False},
         }
 
     def create(self, validated_data):
@@ -75,14 +72,16 @@ class UserPhotoSerializer(serializers.ModelSerializer):
 
 
 class UserSerializerExtended(UserSerializer):
-    photos = UserPhotoSerializer(many=True)
+    photos = UserPhotoSerializer(many=True, required=False)
 
     class Meta:
         model = User
         fields = ('id', 'first_name', 'about', 'password', 'username', 'avatar', 'photos', 'href')
 
         extra_kwargs = {
-            'password': {'write_only': True, 'required': False}
+            'password': {'write_only': True, 'required': False},
+            'avatar': {'required': False},
+            'photos': {'required': False},
         }
 
 
