@@ -134,6 +134,11 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     coordinates = LocationSerializer(read_only=False)
 
+    href = serializers.SerializerMethodField()
+
+    def get_href(self, obj):
+        return reverse_full('meeting-detail', kwargs={'pk': obj.id})
+
     def serialize_coordinates(self, instance):
         return {
             'lat': instance.coordinates.coords[0],
@@ -156,7 +161,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ('id', 'title', 'description', 'owner', 'coordinates', 'subway')
+        fields = ('id', 'title', 'description', 'owner', 'coordinates', 'subway', 'href')
 
 
 class JsonResponseSerializer(serializers.Serializer):
