@@ -151,9 +151,9 @@ class FileUploadView(APIView):
             raise UploadException(response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
 
     def save_file(self, filename, file_obj):
-
-        self.storage.save('{0}/{1}'.format(self.url_prefix, filename), file_obj)
-        full_path = self.storage.url('1.png')
+        local_path = '{0}/{1}'.format(self.url_prefix, filename)
+        self.storage.save(local_path, file_obj)
+        full_path = self.storage.url(local_path)
 
         try:
             if self.request.GET.get('is_avatar'):
