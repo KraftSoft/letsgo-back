@@ -1,7 +1,9 @@
 import magic
 import re
 
+from django.conf import settings
 from django.db import DatabaseError
+from django.views.generic import View, RedirectView, TemplateView
 from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
@@ -152,8 +154,10 @@ class FileUploadView(APIView):
 
     def save_file(self, filename, file_obj):
 
-        self.storage.save('{0}/{1}'.format(self.url_prefix, filename), file_obj)
-        full_path = self.storage.url('1.png')
+        local_path = '{0}/{1}'.format(self.url_prefix, filename)
+        self.storage.save(local_path, file_obj)
+
+        full_path = self.storage.url(local_path)
 
         try:
             if self.request.GET.get('is_avatar'):
@@ -181,3 +185,18 @@ class FileUploadView(APIView):
             return Response(self.serializer_class(e.response).data)
 
         return Response(self.serializer_class(JsonResponse(status=204, msg='ok')).data)
+
+
+class OAuth(RedirectView):
+    def get(self, request, *args, **kwargs):
+        print('oauth')
+        return Response(data={'status': 'ok'})
+
+    def get_redirect_url(self, *args, **kwargs):
+        print('get_redirect_url')
+        return super(OAuth, self).get_redirect_url()
+
+
+class IndexView(TemplateView):
+    template_name = 'index.html'
+
