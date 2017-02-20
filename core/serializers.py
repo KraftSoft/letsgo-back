@@ -71,6 +71,12 @@ class UserPhotoSerializer(serializers.ModelSerializer):
         fields = ('photo', )
 
 
+class PhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserPhotos
+        fields = ('is_avatar', )
+
+
 class UserSerializerExtended(UserSerializer):
     photos = UserPhotoSerializer(many=True, required=False)
 
@@ -165,6 +171,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
 
 class JsonResponseSerializer(serializers.Serializer):
+
     def update(self, instance, validated_data):
         pass
 
