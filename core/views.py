@@ -63,6 +63,10 @@ class IsStaffOrOwner(BasePermission):
         except (object_model.DoesNotExist, KeyError):
             return False
 
+        if not hasattr(model, 'owner'):
+            logger.error('Model {0} does not have a owner, but you use mixin IsStaffOrOwner'.format(model.__name__))
+            return False
+
         if request.user.pk == model.owner.pk:
             return True
         return super().has_permission(request, view)
@@ -167,11 +171,11 @@ class FileUploadView(APIView):
         full_path = self.storage.url(local_path)
 
         try:
-            if self.request.GET.get('is_avatar'):
-                UserPhotos.objects.filter(owner=self.request.user, is_avatar=True).update(is_avatar=False)
-                UserPhotos.objects.create(owner=self.request.user, photo=full_path, is_avatar=True)
-            else:
+            photos_cnt = UserPhotos.objects.filter(owner=self.request.user).count()
+            if photos_cnt > 0:
                 UserPhotos.objects.create(owner=self.request.user, photo=full_path)
+            else:
+                UserPhotos.objects.create(owner=self.request.user, photo=full_path, is_avatar=True)
         except DatabaseError as e:
             logger.error('Can not save photo for user_id={0}, photo_path: {1}\nError:{2}'.format(self.request.user.id, full_path, e))
 
