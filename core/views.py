@@ -1,17 +1,17 @@
-import magic
+import logging
 import re
 
-from django.conf import settings
+import magic
+from django.core.files.storage import default_storage
 from django.db import DatabaseError
-from django.views.generic import View, RedirectView, TemplateView
 from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
 from rest_framework.generics import UpdateAPIView
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAdminUser, BasePermission, IsAuthenticated
-from rest_framework.reverse import reverse
 from rest_framework.response import Response
+from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from core.constants import BASE_ERROR_MSG
@@ -19,10 +19,6 @@ from core.exceptions import UploadException
 from core.models import User, Meeting, UserPhotos
 from core.serializers import MeetingSerializer, JsonResponseSerializer as JRS, UserSerializerExtended, PhotoSerializer
 from core.utils import JsonResponse
-
-from django.core.files.storage import default_storage
-
-import logging
 
 logger = logging.getLogger(__name__)
 
