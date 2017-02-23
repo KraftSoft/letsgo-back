@@ -2,6 +2,7 @@
 API
 ===
 Список мероприятий
+------------------
 GET /meetings-list/
 <details>
 **Request headers:**
@@ -121,6 +122,7 @@ GET /meetings-list/
 </details>
 
 Добавление мероприятия
+----------------------
 POST /meetings-list/
 c json 
 ```
