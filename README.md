@@ -1,11 +1,10 @@
-
 API
 ===
 Список мероприятий
 ------------------
-GET /meetings-list/
+GET /meetings-list/__
 **Example request headers:**
-`GET /meetings-list/ HTTP/1.1`
+`GET /meetings-list/ HTTP/1.1`__
 `Accept: */*`
 `Accept-Encoding: gzip, deflate`
 `Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2`
