@@ -5,9 +5,9 @@ API
 GET /meetings-list/<br/>
 **Example request headers:**
 `GET /meetings-list/ HTTP/1.1`<br/>
-`Accept: */*`
-`Accept-Encoding: gzip, deflate`
-`Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2`
+`Accept: */*`<br/>
+`Accept-Encoding: gzip, deflate`<br/>
+`Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2`<br/>
 `Connection: keep-alive`
 `Host: 185.76.147.143`
 `User-Agent: HTTPie/0.9.6`
