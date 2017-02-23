@@ -1,8 +1,8 @@
 
 API
 ===
-
-/meetings-list/
+Список мероприятий
+GET /meetings-list/
 <details>
 **Request headers:**
 `GET /meetings-list/ HTTP/1.1`
@@ -119,3 +119,18 @@ API
 ]
 ```
 </details>
+
+Добавление мероприятия
+POST /meetings-list/
+c json 
+```
+{
+    "title": "title", 
+    "description": "desc", 
+    "coordinates": {
+        "lat": 20, 
+        "lng":30
+    }
+}
+```
+`curl -H "Content-Type: application/json" -H "Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2" -X POST -d '{"title": "title", "description": "desc", "coordinates": {"lat": 20, "lng":30}}'`
