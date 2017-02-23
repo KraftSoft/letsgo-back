@@ -2,8 +2,7 @@ API
 ===
 Список мероприятий
 ------------------
-<br/>
-GET /meetings-list/<br/>
+<br/><br/>GET /meetings-list/<br/>
 **Example request headers:**
 `GET /meetings-list/ HTTP/1.1`<br/>
 `Accept: */*`<br/>
