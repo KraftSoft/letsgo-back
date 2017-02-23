@@ -2,9 +2,9 @@ API
 ===
 Список мероприятий
 ------------------
-GET /meetings-list/__
+GET /meetings-list/<br/>
 **Example request headers:**
-`GET /meetings-list/ HTTP/1.1`__
+`GET /meetings-list/ HTTP/1.1`<br/>
 `Accept: */*`
 `Accept-Encoding: gzip, deflate`
 `Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2`
