@@ -41,7 +41,6 @@ POST /meetings-list/<br/>
 Изменение юзера
 ---------------
 PUT /user-detail/1/<br/>
-<br/>
 **Example request headers:**<br/>
 `User-Agent: curl/7.35.0`<br/>
 `Host: 185.76.147.143`<br/>
