@@ -2,29 +2,31 @@ API
 ===
 Список мероприятий
 ------------------
+<br/>
 GET /meetings-list/<br/>
 **Example request headers:**
 `GET /meetings-list/ HTTP/1.1`<br/>
 `Accept: */*`<br/>
 `Accept-Encoding: gzip, deflate`<br/>
 `Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2`<br/>
-`Connection: keep-alive`
-`Host: 185.76.147.143`
-`User-Agent: HTTPie/0.9.6`
-
+`Connection: keep-alive`<br/>
+`Host: 185.76.147.143`<br/>
+`User-Agent: HTTPie/0.9.6`<br/>
+<br/>
 `http 185.76.147.143/meetings-list/ 'Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2'`
 
 Добавление мероприятия
 ----------------------
-POST /meetings-list/
-**Example request headers:**
-`User-Agent: curl/7.35.0`
-`Host: 185.76.147.143`
-`Accept: */*`
-`Content-Type: application/json`
-`Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2`
-`Content-Length: xxx`
-
+<br/>
+POST /meetings-list/<br/>
+**Example request headers:**<br/>
+`User-Agent: curl/7.35.0`<br/>
+`Host: 185.76.147.143`<br/>
+`Accept: */*`<br/>
+`Content-Type: application/json`<br/>
+`Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2`<br/>
+`Content-Length: xxx`<br/>
+<br/>
 ```
 {
     "title": "title", 
@@ -39,16 +41,17 @@ POST /meetings-list/
 
 Изменение юзера
 ---------------
-PUT /user-detail/1/
-
-**Example request headers:**
-`User-Agent: curl/7.35.0`
-`Host: 185.76.147.143`
-`Accept: */*`
-`Content-Type: application/json`
-`Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2`
-`Content-Length: 77`
-
+<br/>
+PUT /user-detail/1/<br/>
+<br/>
+**Example request headers:**<br/>
+`User-Agent: curl/7.35.0`<br/>
+`Host: 185.76.147.143`<br/>
+`Accept: */*`<br/>
+`Content-Type: application/json`<br/>
+`Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2`<br/>
+`Content-Length: 77`<br/>
+<br/>
 ```
 {
     "username": "new_nick", 
