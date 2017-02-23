@@ -40,7 +40,6 @@ POST /meetings-list/<br/>
 
 Изменение юзера
 ---------------
-<br/>
 PUT /user-detail/1/<br/>
 <br/>
 **Example request headers:**<br/>
