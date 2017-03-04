@@ -7,7 +7,7 @@ from django.db import DatabaseError
 from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
-from rest_framework.generics import UpdateAPIView, CreateAPIView
+from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAdminUser, BasePermission, IsAuthenticated
 from rest_framework.response import Response
@@ -20,7 +20,8 @@ from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin
 from core.models import User, Meeting, UserPhotos
 from core.permissions import IsStaffOrMe, IsStaffOrOwner, GeneralPermissionMixin
-from core.serializers import MeetingSerializer, JsonResponseSerializer as JRS, UserSerializerExtended, PhotoSerializer
+from core.serializers import MeetingSerializer, JsonResponseSerializer as JRS, UserSerializerExtended, PhotoSerializer, \
+    ConfirmSerializer
 from core.utils import JsonResponse
 
 logger = logging.getLogger(__name__)
@@ -144,7 +145,7 @@ class SetAvatar(GeneralPermissionMixin, PhotoMixin, UpdateAPIView):
         return Response(JRS(JsonResponse(status=200, msg='ok')).data)
 
 
-class ConfirmCreate(CreateAPIView):
+class ConfirmCreate(GeneralPermissionMixin, CreateAPIView):
     def create(self, request, *args, **kwargs):
 
         meeting_pk = kwargs['pk']
@@ -159,3 +160,11 @@ class ConfirmCreate(CreateAPIView):
         Confirm.objects.create(meeting=meeting, user=request.user)
 
         return Response(JRS(JsonResponse(status=200, msg='ok')).data)
+
+
+class ConfirmsList(GeneralPermissionMixin, ListAPIView):
+    serializer_class = ConfirmSerializer
+
+    def get(self, request, *args, **kwargs):
+        self.queryset = Confirm.objects.filter(meeting__owner=request.user, is_approved=False, is_rejected=False)
+        return super().get(request, *args, **kwargs)

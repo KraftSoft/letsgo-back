@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
 from core.views import UserList, UserDetail, MeetingsList, MeetingDetail, UserCreate, AuthView, FileUploadView, SetAvatar, \
-    ConfirmCreate
+    ConfirmCreate, ConfirmsList
 
 urlpatterns = [
 
@@ -21,4 +21,7 @@ urlpatterns = [
     url(r'^set-avatar/(?P<pk>\d+)/$', SetAvatar.as_view(), name='set-avatar'),
 
     url(r'^meeting-confirm/(?P<pk>\d+)/$', ConfirmCreate.as_view(), name='meeting-confirm'),
+
+    url(r'^confirms-list/$', ConfirmsList.as_view(), name='confirms-list'),
+
 ]

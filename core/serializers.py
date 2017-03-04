@@ -6,6 +6,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.settings import api_settings
+
+from chat.models import Confirm
 from core.models import User, Meeting, UserPhotos
 from core.utils import reverse_full, build_absolute_url
 
@@ -182,9 +184,10 @@ class JsonResponseSerializer(serializers.Serializer):
     msg = serializers.CharField(max_length=512)
 
 
-class ConfirmSerializer(serializers.Serializer):
-    def create(self, validated_data):
-        pass
+class ConfirmSerializer(serializers.ModelSerializer):
+    meeting = MeetingSerializer(read_only=True)
+    user = UserSerializer(read_only=True)
 
-    def update(self, instance, validated_data):
-        pass
+    class Meta:
+        model = Confirm
+        fields = ('id', 'meeting', 'user', 'date_create')
