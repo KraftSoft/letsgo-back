@@ -168,3 +168,7 @@ class ConfirmsList(GeneralPermissionMixin, ListAPIView):
     def get(self, request, *args, **kwargs):
         self.queryset = Confirm.objects.filter(meeting__owner=request.user, is_approved=False, is_rejected=False)
         return super().get(request, *args, **kwargs)
+
+
+class AcceptConfirm(GeneralPermissionMixin, UpdateAPIView):
+    pass
