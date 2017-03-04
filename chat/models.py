@@ -12,6 +12,9 @@ class Confirm(models.Model):
     is_approved = models.BooleanField(default=False)
     is_rejected = models.BooleanField(default=False)
 
+    class Meta:
+        unique_together = ('meeting', 'user')
+
 
 class Chat(models.Model):
     title = models.CharField(max_length=32)
