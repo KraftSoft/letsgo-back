@@ -27,6 +27,16 @@ MEETING_TITLE_2 = 'go drink'
 MEETING_DESC_2 = 'Party for everybody :)'
 
 
+def client_creation(username, password):
+    test_user = User.objects.create(username=username)
+    test_user.set_password(password)
+    test_user.save()
+    token, _ = Token.objects.get_or_create(user=test_user)
+    token_key = token.key
+    token = 'Token {}'.format(token_key)
+    client = Client(HTTP_AUTHORIZATION=token)
+    return client
+
 
 def check_json(data, fields):
     for field in fields:
@@ -128,19 +138,30 @@ class MeetingTests(MeetingMixin, TestCase):
         data = response.data
         check_json(data, fields)
 
-    def create_meeting(self, lat, lng, title):
+    def create_meeting(self, lat, lng, title, creator = None):
         desc = title + "desk"
         coords = {
             'lat': lat,
             'lng': lng
         }
         request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords})
-        response = self.client.post(reverse('meetings-list'), request_data, content_type='application/json')
+        response = None
+        if(creator != None):
+            response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
+            return response
+        else:
+            response = self.client.post(reverse('meetings-list'), request_data, content_type='application/json')
+            return response
+
 
 
     def test_meeting_get_inradius(self):
-        for i in range (0, 5):
-            self.create_meeting(i , i , "title" + str(i))
+        client1 = client_creation("vasyan", "qwerty")
+        client2 = client_creation("petyan", "qwerty")
+        for i in range (0, 3):
+            response = self.create_meeting(i , i , "title" + str(i), client1)
+        for i in range (3, 5):
+            response = self.create_meeting(i , i , "title" + str(i), client2)
 
         response = self.client.get("/meetings-list/?lng=2&lat=2&r=1")
         data = response.data
@@ -148,6 +169,17 @@ class MeetingTests(MeetingMixin, TestCase):
         response = self.client.get("/meetings-list/?lng=2&lat=2&r=10000000000000000000")
         data = response.data
         self.assertEqual(len(data), 7)
+
+    def test_4_meeting_add(self):
+        client1 = client_creation("vasyan", "qwerty")
+        for i in range (0, 5):
+            response = self.create_meeting(i , i , "title" + str(i), client1)
+            data = response.data
+            status_code = data.get('status', None)
+            if i < 4:
+                self.assertEqual(status_code, None)
+            else:
+                self.assertEqual(status_code, 429)
 
     def test_meeting_get_baddata(self):
         response = self.client.get("/meetings-list/?lng=keklol&lat=2&r=1")
@@ -264,6 +296,7 @@ class UpdateCases(MeetingMixin, TransactionTestCase):
             content_type='application/json',
             )
         self.assertEqual(response.status_code, 401 )
+
 
 
 class UploadPhotoTest(AuthUserMixin, TestCase):

@@ -41,7 +41,6 @@ class IsStaff(BasePermission):
 
 class IsStaffOrTargetUser(IsStaff):
     def has_permission(self, request, view):
-
         if request.user.pk == view.kwargs.get('pk'):
             return True
 
@@ -111,12 +110,13 @@ class MeetingMixin(object):
     lat = None
     lng = None
     r = None
+
     def get_queryset(self):
-        if(self.lat == None or self.lng == None or self.r == None):
+        if (self.lat == None or self.lng == None or self.r == None):
             return Meeting.objects.all()
         radius = float(self.r) * 1000
         query = "select *  from core_meeting where ST_Distance_Sphere(coordinates, ST_MakePoint({lat},{lng})) <=  {r};".format(
-            lat = self.lat, lng = self.lng, r = radius)
+            lat=self.lat, lng=self.lng, r=radius)
         return Meeting.objects.raw(query)
 
 
@@ -144,9 +144,15 @@ class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestr
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         user = request.user
-        count_meetings = Meeting.objects.filter(owner = user).count()
-        if count_meetings >=3:
-            return super().post(request, *args, **kwargs)
+        MAX_MEETINGS = 3
+        count_meetings = Meeting.objects.filter(owner=user).count()
+        if(count_meetings == 4):
+            debug = 1
+        if count_meetings > MAX_MEETINGS:
+            logger.error(
+                'USER user_id={0} trying to create more than MAX_MEETINGS meetings'.format(self.request.user.id))
+            return Response(
+                JRS(JsonResponse(status=429, msg="user's trying to create more than MAX_MEETINGS meetings")).data)
         return super().post(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
@@ -170,7 +176,6 @@ class AuthView(ObtainAuthToken):
 
 
 class FileUploadView(APIView):
-
     parser_classes = (FileUploadParser,)
 
     url_prefix = 'user-photos'
@@ -185,7 +190,8 @@ class FileUploadView(APIView):
         mime_type = magic.from_buffer(file_obj.read(), mime=True)
 
         if not re.match('image/', mime_type):
-            raise UploadException(response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
+            raise UploadException(
+                response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
 
     def save_file(self, filename, file_obj):
 
@@ -200,7 +206,9 @@ class FileUploadView(APIView):
             else:
                 UserPhotos.objects.create(owner=self.request.user, photo=full_path, is_avatar=True)
         except DatabaseError as e:
-            logger.error('Can not save photo for user_id={0}, photo_path: {1}\nError:{2}'.format(self.request.user.id, full_path, e))
+            logger.error(
+                'Can not save photo for user_id={0}, photo_path: {1}\nError:{2}'.format(self.request.user.id, full_path,
+                                                                                        e))
 
     def put(self, request, filename, format=None):
 
