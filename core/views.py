@@ -16,7 +16,9 @@ from rest_framework.views import APIView
 
 from core.constants import BASE_ERROR_MSG
 from core.exceptions import UploadException
+from core.mixins import UserMixin, MeetingMixin, PhotoMixin
 from core.models import User, Meeting, UserPhotos
+from core.permissions import IsStaffOrMe, IsStaffOrOwner, GeneralPermissionMixin
 from core.serializers import MeetingSerializer, JsonResponseSerializer as JRS, UserSerializerExtended, PhotoSerializer
 from core.utils import JsonResponse
 
@@ -31,92 +33,6 @@ def api_root(request, format=None):
     return Response({
         'users': reverse('user-list', request=request),
     })
-
-
-class IsStaff(BasePermission):
-    def has_permission(self, request, view):
-        if request.user.is_staff:
-            return True
-
-
-class IsStaffOrTargetUser(IsStaff):
-    def has_permission(self, request, view):
-
-        if request.user.pk == view.kwargs.get('pk'):
-            return True
-
-        return super().has_permission(request, view)
-
-
-class IsStaffOrOwner(BasePermission):
-    def has_permission(self, request, view):
-
-        if request.user.is_anonymous():
-            return False
-
-        object_model = view.model
-
-        try:
-            model = object_model.objects.get(pk=view.kwargs['pk'])
-        except (object_model.DoesNotExist, KeyError):
-            return False
-
-        if not hasattr(model, 'owner'):
-            logger.error('Model {0} does not have a owner, but you use mixin IsStaffOrOwner'.format(model.__name__))
-            return False
-
-        if request.user.pk == model.owner.pk:
-            return True
-        return super().has_permission(request, view)
-
-
-class IsStaffOrMe(BasePermission):
-    def has_permission(self, request, view):
-        me = view.model
-        if request.user.pk == me.pk:
-            return True
-        return super().has_permission(request, view)
-
-
-class GeneralPermissionMixin(object):
-    def get_permissions(self):
-
-        if self.request.method == 'DELETE':
-            return [IsAdminUser()]
-
-        elif self.request.method == 'GET':  # only authorized users can see objects
-            return [IsAuthenticated()]
-
-        elif self.request.method == 'POST':  # only authorized users can create objects
-            return [IsAuthenticated()]
-
-        else:
-            return [self.who_can_update()]  # only owners can update objects
-
-
-class UserMixin(object):
-    model = User
-    serializer_class = UserSerializerExtended
-    queryset = User.objects.all()
-
-    who_can_update = IsStaffOrMe
-
-
-class MeetingMixin(object):
-    model = Meeting
-    serializer_class = MeetingSerializer
-    who_can_update = IsStaffOrOwner
-
-    queryset = Meeting.objects.all()
-
-
-class PhotoMixin(object):
-    model = UserPhotos
-    serializer_class = PhotoSerializer
-    who_can_update = IsStaffOrOwner
-
-    def get_queryset(self):
-        return UserPhotos.objects.all()
 
 
 class UserCreate(UserMixin, generics.CreateAPIView):
