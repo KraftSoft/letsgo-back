@@ -133,6 +133,10 @@ class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestr
 
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
+        user = request.user
+        count_meetings = Meeting.objects.filter(owner = user).count()
+        if count_meetings >=3:
+            return "HUI"
         return super().post(request, *args, **kwargs)
 
 
