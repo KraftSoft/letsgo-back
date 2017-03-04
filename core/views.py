@@ -7,13 +7,14 @@ from django.db import DatabaseError
 from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
-from rest_framework.generics import UpdateAPIView
+from rest_framework.generics import UpdateAPIView, CreateAPIView
 from rest_framework.parsers import FileUploadParser
 from rest_framework.permissions import IsAdminUser, BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
+from chat.models import Confirm
 from core.constants import BASE_ERROR_MSG
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin
@@ -139,5 +140,22 @@ class SetAvatar(GeneralPermissionMixin, PhotoMixin, UpdateAPIView):
             logger.error(
                 'Can not set avatar for user_id={0}, photo_id: {1}\nError: {2}'.format(self.request.user.id, obj_pk, e))
             return Response(JRS(JsonResponse(status=500, msg=BASE_ERROR_MSG)).data)
+
+        return Response(JRS(JsonResponse(status=200, msg='ok')).data)
+
+
+class ConfirmCreate(CreateAPIView):
+    def create(self, request, *args, **kwargs):
+
+        meeting_pk = kwargs['pk']
+        try:
+            meeting = Meeting.objects.get(pk=meeting_pk)
+        except Meeting.DoesNotExist:
+            return Response(JRS(JsonResponse(status=404, msg='meeting does not exist')).data)
+
+        if meeting.owner_id == request.user.id:
+            return Response(JRS(JsonResponse(status=400, msg='you can not confirm to your event')).data)
+
+        Confirm.objects.create(meeting=meeting, user=request.user)
 
         return Response(JRS(JsonResponse(status=200, msg='ok')).data)

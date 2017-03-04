@@ -1,6 +1,7 @@
+from chat.models import Confirm
 from core.models import User, Meeting, UserPhotos
 from core.permissions import IsStaffOrMe, IsStaffOrOwner
-from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSerializer
+from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSerializer, ConfirmSerializer
 
 
 class UserMixin(object):
@@ -26,3 +27,9 @@ class PhotoMixin(object):
 
     def get_queryset(self):
         return UserPhotos.objects.all()
+
+
+class ConfirmMixin(object):
+    model = Confirm
+    serializer_class = ConfirmSerializer
+    who_can_update = IsStaffOrOwner

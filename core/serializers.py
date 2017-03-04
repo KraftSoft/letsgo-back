@@ -180,3 +180,11 @@ class JsonResponseSerializer(serializers.Serializer):
 
     status = serializers.IntegerField()
     msg = serializers.CharField(max_length=512)
+
+
+class ConfirmSerializer(serializers.Serializer):
+    def create(self, validated_data):
+        pass
+
+    def update(self, instance, validated_data):
+        pass
