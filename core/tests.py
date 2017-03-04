@@ -145,7 +145,6 @@ class MeetingTests(MeetingMixin, TestCase):
             'lng': lng
         }
         request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords})
-        response = None
         if(creator != None):
             response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
             return response

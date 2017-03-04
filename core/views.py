@@ -146,8 +146,6 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
         user = request.user
         MAX_MEETINGS = 3
         count_meetings = Meeting.objects.filter(owner=user).count()
-        if(count_meetings == 4):
-            debug = 1
         if count_meetings > MAX_MEETINGS:
             logger.error(
                 'USER user_id={0} trying to create more than MAX_MEETINGS meetings'.format(self.request.user.id))
