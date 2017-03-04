@@ -108,6 +108,16 @@ class MeetingMixin(object):
     who_can_update = IsStaffOrOwner
 
     queryset = Meeting.objects.all()
+    lat = None
+    lng = None
+    r = None
+    def get_queryset(self):
+        if(self.lat == None or self.lng == None or self.r == None):
+            return Meeting.objects.all()
+        radius = float(self.r) * 1000
+        query = "select *  from core_meeting where ST_Distance_Sphere(coordinates, ST_MakePoint({lat},{lng})) <=  {r};".format(
+            lat = self.lat, lng = self.lng, r = radius)
+        return Meeting.objects.raw(query)
 
 
 class PhotoMixin(object):
@@ -136,8 +146,19 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
         user = request.user
         count_meetings = Meeting.objects.filter(owner = user).count()
         if count_meetings >=3:
-            return "HUI"
+            return super().post(request, *args, **kwargs)
         return super().post(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.lat = float(request.GET.get('lat'))
+            self.lng = float(request.GET.get('lng'))
+            self.r = float(request.GET.get('r'))
+        except:
+            self.lat = None
+            self.lng = None
+            self.r = None
+        return super().get(request, *args, **kwargs)
 
 
 class MeetingDetail(GeneralPermissionMixin, MeetingMixin, generics.RetrieveUpdateAPIView):
