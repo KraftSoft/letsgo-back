@@ -17,7 +17,7 @@ from rest_framework.views import APIView
 from chat.models import Confirm
 from core.constants import BASE_ERROR_MSG
 from core.exceptions import UploadException
-from core.mixins import UserMixin, MeetingMixin, PhotoMixin
+from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin
 from core.models import User, Meeting, UserPhotos
 from core.permissions import IsStaffOrMe, IsStaffOrOwner, GeneralPermissionMixin
 from core.serializers import MeetingSerializer, JsonResponseSerializer as JRS, UserSerializerExtended, PhotoSerializer, \
@@ -162,13 +162,12 @@ class ConfirmCreate(GeneralPermissionMixin, CreateAPIView):
         return Response(JRS(JsonResponse(status=200, msg='ok')).data)
 
 
-class ConfirmsList(GeneralPermissionMixin, ListAPIView):
-    serializer_class = ConfirmSerializer
+class ConfirmsList(GeneralPermissionMixin, ConfirmMixin, ListAPIView):
 
     def get(self, request, *args, **kwargs):
         self.queryset = Confirm.objects.filter(meeting__owner=request.user, is_approved=False, is_rejected=False)
         return super().get(request, *args, **kwargs)
 
 
-class AcceptConfirm(GeneralPermissionMixin, UpdateAPIView):
+class AcceptConfirm(GeneralPermissionMixin, ConfirmMixin, UpdateAPIView):
     pass

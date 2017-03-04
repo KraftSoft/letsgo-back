@@ -31,5 +31,7 @@ class PhotoMixin(object):
 
 class ConfirmMixin(object):
     model = Confirm
+    queryset = Confirm.objects.all()
     serializer_class = ConfirmSerializer
     who_can_update = IsStaffOrOwner
+    owner_path = 'meeting.owner'

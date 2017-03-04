@@ -184,10 +184,13 @@ class JsonResponseSerializer(serializers.Serializer):
     msg = serializers.CharField(max_length=512)
 
 
-class ConfirmSerializer(serializers.ModelSerializer):
+class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
+
+    UPDATE_AVAILABLE_FIELDS = ('is_approved', 'is_rejected')
+
     meeting = MeetingSerializer(read_only=True)
     user = UserSerializer(read_only=True)
 
     class Meta:
         model = Confirm
-        fields = ('id', 'meeting', 'user', 'date_create')
+        fields = ('id', 'meeting', 'user', 'date_create', 'is_approved', 'is_rejected')

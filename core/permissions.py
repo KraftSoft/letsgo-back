@@ -1,4 +1,6 @@
 import logging
+import operator
+
 from rest_framework.permissions import BasePermission, IsAdminUser, IsAuthenticated
 
 logger = logging.getLogger(__name__)
@@ -32,12 +34,17 @@ class IsStaffOrOwner(BasePermission):
         except (object_model.DoesNotExist, KeyError):
             return False
 
-        if not hasattr(model, 'owner'):
-            logger.error('Model {0} does not have a owner, but you use mixin IsStaffOrOwner'.format(model.__name__))
+        path_to_owner = getattr(view, 'owner_path', 'owner')
+
+        try:
+            owner = operator.attrgetter(path_to_owner)(model)
+        except AttributeError:
+            logger.error('Wrong path tp owner')
             return False
 
-        if request.user.pk == model.owner.pk:
+        if request.user.pk == owner.pk:
             return True
+
         return super().has_permission(request, view)
 
 
