@@ -10,6 +10,7 @@ from django.contrib.gis.geos import Point
 import json
 import copy
 from core.views import FileUploadView
+from core.constants import MAX_MEETINGS
 
 TEST_USER_1 = 'masha'
 TEST_USER_PW_1 = '0'
@@ -159,15 +160,18 @@ class MeetingTests(MeetingMixin, TestCase):
         client2 = client_creation("petyan", "qwerty")
         for i in range (0, 3):
             response = self.create_meeting(i , i , "title" + str(i), client1)
-        for i in range (3, 5):
+        for i in range (3, 6):
             response = self.create_meeting(i , i , "title" + str(i), client2)
 
         response = self.client.get("/meetings-list/?lng=2&lat=2&r=1")
         data = response.data
         self.assertEqual(len(data), 1)
+        response = self.client.get("/meetings-list/?lng=2.2&lat=2.2&r=200")
+        data = response.data
+        self.assertEqual(len(data), 3)
         response = self.client.get("/meetings-list/?lng=2&lat=2&r=10000000000000000000")
         data = response.data
-        self.assertEqual(len(data), 7)
+        self.assertEqual(len(data), 8)
 
     def test_4_meeting_add(self):
         client1 = client_creation("vasyan", "qwerty")
@@ -175,7 +179,7 @@ class MeetingTests(MeetingMixin, TestCase):
             response = self.create_meeting(i , i , "title" + str(i), client1)
             data = response.data
             status_code = data.get('status', None)
-            if i < 4:
+            if i < MAX_MEETINGS:
                 self.assertEqual(status_code, None)
             else:
                 self.assertEqual(status_code, 429)

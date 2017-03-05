@@ -15,6 +15,7 @@ from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from core.constants import BASE_ERROR_MSG
+from core.constants import MAX_MEETINGS
 from core.exceptions import UploadException
 from core.models import User, Meeting, UserPhotos
 from core.serializers import MeetingSerializer, JsonResponseSerializer as JRS, UserSerializerExtended, PhotoSerializer
@@ -114,7 +115,7 @@ class MeetingMixin(object):
     def get_queryset(self):
         if (self.lat == None or self.lng == None or self.r == None):
             return Meeting.objects.all()
-        radius = float(self.r) * 1000
+        radius = self.r * 1000
         query = "select *  from core_meeting where ST_Distance_Sphere(coordinates, ST_MakePoint({lat},{lng})) <=  {r};".format(
             lat=self.lat, lng=self.lng, r=radius)
         return Meeting.objects.raw(query)
@@ -144,9 +145,8 @@ class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestr
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         user = request.user
-        MAX_MEETINGS = 3
         count_meetings = Meeting.objects.filter(owner=user).count()
-        if count_meetings > MAX_MEETINGS:
+        if count_meetings >= MAX_MEETINGS:
             logger.error(
                 'USER user_id={0} trying to create more than MAX_MEETINGS meetings'.format(self.request.user.id))
             return Response(
@@ -158,7 +158,7 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
             self.lat = float(request.GET.get('lat'))
             self.lng = float(request.GET.get('lng'))
             self.r = float(request.GET.get('r'))
-        except:
+        except (ValueError, TypeError):
             self.lat = None
             self.lng = None
             self.r = None
