@@ -16,6 +16,11 @@ from rest_framework.views import APIView
 
 from core.constants import BASE_ERROR_MSG
 from core.constants import MAX_MEETINGS
+from core.constants import MOSCOW_LAT
+from core.constants import MOSCOW_LNG
+from core.constants import MOSCKOW_R
+
+
 from core.exceptions import UploadException
 from core.models import User, Meeting, UserPhotos
 from core.serializers import MeetingSerializer, JsonResponseSerializer as JRS, UserSerializerExtended, PhotoSerializer
@@ -147,7 +152,7 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
         user = request.user
         count_meetings = Meeting.objects.filter(owner=user).count()
         if count_meetings >= MAX_MEETINGS:
-            logger.error(
+            logger.warning(
                 'USER user_id={0} trying to create more than MAX_MEETINGS meetings'.format(self.request.user.id))
             return Response(
                 JRS(JsonResponse(status=429, msg="user's trying to create more than MAX_MEETINGS meetings")).data)
@@ -159,10 +164,11 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
             self.lng = float(request.GET.get('lng'))
             self.r = float(request.GET.get('r'))
         except (ValueError, TypeError):
-            self.lat = None
-            self.lng = None
-            self.r = None
+            self.lat = MOSCOW_LAT
+            self.lng = MOSCOW_LNG
+            self.r = MOSCKOW_R
         return super().get(request, *args, **kwargs)
+
 
 
 class MeetingDetail(GeneralPermissionMixin, MeetingMixin, generics.RetrieveUpdateAPIView):
