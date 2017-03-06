@@ -163,17 +163,15 @@ class MeetingTests(MeetingMixin, TestCase):
         for i in range (3, 6):
             response = self.create_meeting(i , i , "title" + str(i), client2)
 
-        response = self.client.get("/meetings-list/?lng=2&lat=2&r=1")
-        # lol = {'lng' : 2, 'lat' : 2, 'r' : 1 }
-        # test  = reverse('meeting-detail', kwargs = lol)
-    # response = self.client.get(test)
 
+        test_url = reverse('meetings-list') + "?lng={lng}&lat={lat}&r={r}"
+        response = self.client.get(test_url.format(lng = 2, lat = 2, r = 1))
         data = response.data
         self.assertEqual(len(data), 1)
-        response = self.client.get("/meetings-list/?lng=2.2&lat=2.2&r=200")
+        response = self.client.get(test_url.format(lng = 2.2, lat = 2.2, r = 200))
         data = response.data
         self.assertEqual(len(data), 3)
-        response = self.client.get("/meetings-list/?lng=2&lat=2&r=10000000000000000000")
+        response = self.client.get(test_url.format(lng = 2.2, lat = 2.2, r = 10000000000000))
         data = response.data
         self.assertEqual(len(data), 8)
 
@@ -190,9 +188,10 @@ class MeetingTests(MeetingMixin, TestCase):
                 self.assertEqual(status_code, 429)
 
     def test_meeting_get_baddata(self):
-        response = self.client.get("/meetings-list/?lng=keklol&lat=2&r=1")
+        test_url = reverse('meetings-list') + "?lng={lng}&lat={lat}&r={r}"
+        response = self.client.get(test_url.format(lng = "kek", lat = 2.2, r = "lol"))
         data = response.data
-        response_all = self.client.get("/meetings-list/")
+        response_all = self.client.get(reverse('meetings-list'))
         data_all = response_all.data
         self.assertEqual(len(data), len(data_all))
 
