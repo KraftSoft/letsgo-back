@@ -171,6 +171,8 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
 
 
 
+
+
 class MeetingDetail(GeneralPermissionMixin, MeetingMixin, generics.RetrieveUpdateAPIView):
     pass
 

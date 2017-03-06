@@ -164,6 +164,10 @@ class MeetingTests(MeetingMixin, TestCase):
             response = self.create_meeting(i , i , "title" + str(i), client2)
 
         response = self.client.get("/meetings-list/?lng=2&lat=2&r=1")
+        # lol = {'lng' : 2, 'lat' : 2, 'r' : 1 }
+        # test  = reverse('meeting-detail', kwargs = lol)
+    # response = self.client.get(test)
+
         data = response.data
         self.assertEqual(len(data), 1)
         response = self.client.get("/meetings-list/?lng=2.2&lat=2.2&r=200")
@@ -180,8 +184,9 @@ class MeetingTests(MeetingMixin, TestCase):
             data = response.data
             status_code = data.get('status', None)
             if i < MAX_MEETINGS:
-                self.assertEqual(status_code, None)
+                self.assertEqual(response.status_code, 201)
             else:
+                self.assertEqual(response.status_code, 200)
                 self.assertEqual(status_code, 429)
 
     def test_meeting_get_baddata(self):
