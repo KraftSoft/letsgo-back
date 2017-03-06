@@ -163,7 +163,6 @@ class MeetingTests(MeetingMixin, TestCase):
         for i in range (3, 6):
             response = self.create_meeting(i , i , "title" + str(i), client2)
 
-
         test_url = reverse('meetings-list') + "?lng={lng}&lat={lat}&r={r}"
         response = self.client.get(test_url.format(lng = 2, lat = 2, r = 1))
         data = response.data
