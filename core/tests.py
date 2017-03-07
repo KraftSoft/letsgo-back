@@ -248,16 +248,11 @@ class UpdateCases(MeetingMixin, TransactionTestCase):
         )
 
         data = response.data
-
         fields = ('id', 'title', 'description', 'coordinates', 'owner')
-
         check_json(data, fields)
-
         self.assertEqual(data['title'], self.NEW_MEET_TITLE)
         self.assertEqual(data['description'], self.NEW_MEET_DESC)
-
         self.assertTrue(isinstance(data['coordinates'], dict))
-
         self.assertEqual(data['coordinates']['lat'], self.LUBERTSY_LAT)
         self.assertEqual(data['coordinates']['lng'], self.LUBERTSY_LNG)
 
@@ -274,7 +269,6 @@ class UpdateCases(MeetingMixin, TransactionTestCase):
                 }),
             content_type='application/json',
             )
-        data = response.data
         self.assertEqual(response.status_code, 401 )
 
 
