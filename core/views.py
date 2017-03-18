@@ -15,6 +15,12 @@ from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from core.constants import BASE_ERROR_MSG
+from core.constants import MAX_MEETINGS
+from core.constants import MOSCOW_LAT
+from core.constants import MOSCOW_LNG
+from core.constants import MOSCKOW_R
+
+
 from core.exceptions import UploadException
 from core.models import User, Meeting, UserPhotos
 from core.serializers import MeetingSerializer, JsonResponseSerializer as JRS, UserSerializerExtended, PhotoSerializer
@@ -41,7 +47,6 @@ class IsStaff(BasePermission):
 
 class IsStaffOrTargetUser(IsStaff):
     def has_permission(self, request, view):
-
         if request.user.pk == view.kwargs.get('pk'):
             return True
 
@@ -108,6 +113,17 @@ class MeetingMixin(object):
     who_can_update = IsStaffOrOwner
 
     queryset = Meeting.objects.all()
+    lat = None
+    lng = None
+    r = None
+
+    def get_queryset(self):
+        if (self.lat == None or self.lng == None or self.r == None):
+            return Meeting.objects.all()
+        radius = self.r * 1000
+        query = "select *  from core_meeting where ST_Distance_Sphere(coordinates, ST_MakePoint({lat},{lng})) <=  {r};".format(
+            lat=self.lat, lng=self.lng, r=radius)
+        return Meeting.objects.raw(query)
 
 
 class PhotoMixin(object):
@@ -133,7 +149,28 @@ class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestr
 
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
+        user = request.user
+        count_meetings = Meeting.objects.filter(owner=user).count()
+        if count_meetings >= MAX_MEETINGS:
+            logger.warning(
+                'USER user_id={0} trying to create more than MAX_MEETINGS meetings'.format(self.request.user.id))
+            return Response(
+                JRS(JsonResponse(status=429, msg="user's trying to create more than MAX_MEETINGS meetings")).data)
         return super().post(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.lat = float(request.GET.get('lat'))
+            self.lng = float(request.GET.get('lng'))
+            self.r = float(request.GET.get('r'))
+        except (ValueError, TypeError):
+            self.lat = MOSCOW_LAT
+            self.lng = MOSCOW_LNG
+            self.r = MOSCKOW_R
+        return super().get(request, *args, **kwargs)
+
+
+
 
 
 class MeetingDetail(GeneralPermissionMixin, MeetingMixin, generics.RetrieveUpdateAPIView):
@@ -145,7 +182,6 @@ class AuthView(ObtainAuthToken):
 
 
 class FileUploadView(APIView):
-
     parser_classes = (FileUploadParser,)
 
     url_prefix = 'user-photos'
@@ -160,7 +196,8 @@ class FileUploadView(APIView):
         mime_type = magic.from_buffer(file_obj.read(), mime=True)
 
         if not re.match('image/', mime_type):
-            raise UploadException(response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
+            raise UploadException(
+                response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
 
     def save_file(self, filename, file_obj):
 
@@ -175,7 +212,9 @@ class FileUploadView(APIView):
             else:
                 UserPhotos.objects.create(owner=self.request.user, photo=full_path, is_avatar=True)
         except DatabaseError as e:
-            logger.error('Can not save photo for user_id={0}, photo_path: {1}\nError:{2}'.format(self.request.user.id, full_path, e))
+            logger.error(
+                'Can not save photo for user_id={0}, photo_path: {1}\nError:{2}'.format(self.request.user.id, full_path,
+                                                                                        e))
 
     def put(self, request, filename, format=None):
 
