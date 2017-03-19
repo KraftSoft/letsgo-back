@@ -18,6 +18,8 @@ lib/
 lib64/
 parts/
 sdist/
+#i fucking hate git
+#i wasn't able to make this commit without this retarded shit
 uploads/
 var/
 *.egg-info/
