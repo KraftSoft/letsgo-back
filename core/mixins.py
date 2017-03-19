@@ -18,7 +18,17 @@ class MeetingMixin(object):
     who_can_update = IsStaffOrOwner
 
     queryset = Meeting.objects.all()
+    lat = None
+    lng = None
+    r = None
 
+    def get_queryset(self):
+        if (self.lat == None or self.lng == None or self.r == None):
+            return Meeting.objects.all()
+        radius = self.r * 1000
+        query = "select *  from core_meeting where ST_Distance_Sphere(coordinates, ST_MakePoint({lat},{lng})) <=  {r};".format(
+            lat=self.lat, lng=self.lng, r=radius)
+        return Meeting.objects.raw(query)
 
 class PhotoMixin(object):
     model = UserPhotos
