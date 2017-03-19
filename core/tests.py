@@ -4,6 +4,8 @@ from PIL import Image
 from django.core.urlresolvers import reverse
 from django.test import TestCase, TransactionTestCase
 from django.test import Client
+
+from chat.models import Confirm
 from core.models import User, Meeting
 from rest_framework.authtoken.models import Token
 from django.contrib.gis.geos import Point
@@ -73,6 +75,12 @@ class MeetingMixin(AuthUserMixin):
                                                      description=MEETING_DESC_2,
                                                      owner=self.test_user,
                                                      coordinates=point)
+
+class ConfirmMixin(MeetingMixin):
+    def setUp(self):
+        super().setUp()
+
+        self.test_confirm = Confirm.objects.create(meeting=self.test_meeting_1, user=self.test_user)
 
 
 class UserTests(AuthUserMixin, TestCase):
@@ -195,7 +203,7 @@ class MeetingTests(MeetingMixin, TestCase):
         self.assertEqual(len(data), len(data_all))
 
 
-class UpdateCases(MeetingMixin, TransactionTestCase):
+class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
 
     NEW_MEET_TITLE = 'New meeting title'
 
@@ -271,8 +279,6 @@ class UpdateCases(MeetingMixin, TransactionTestCase):
             )
         self.assertEqual(response.status_code, 401 )
 
-
-
     def test_wrong_user(self):
         ##user 3
         test_user3 = User.objects.create(username=TEST_USER_3)
@@ -297,6 +303,50 @@ class UpdateCases(MeetingMixin, TransactionTestCase):
             )
         self.assertEqual(response.status_code, 401 )
 
+
+class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
+    def setUp(self):
+        super().setUp()
+
+    def test_approve__success(self):
+
+        self.assertFalse(self.test_confirm.is_approved)
+
+        response = self.client.put(
+            reverse('confirm-action', kwargs={'pk': self.test_confirm.pk}),
+            json.dumps({
+                'is_approved': True,
+            }),
+            content_type='application/json',
+        )
+
+        code = response.status_code
+
+        self.assertEqual(code, 200)
+
+        confirm = Confirm.objects.get(pk=self.test_confirm.pk)
+
+        self.assertTrue(confirm.is_approved)
+
+    def test_reject__success(self):
+
+        self.assertFalse(self.test_confirm.is_rejected)
+
+        response = self.client.put(
+            reverse('confirm-action', kwargs={'pk': self.test_confirm.pk}),
+            json.dumps({
+                'is_rejected': True,
+            }),
+            content_type='application/json',
+        )
+
+        code = response.status_code
+
+        self.assertEqual(code, 200)
+
+        confirm = Confirm.objects.get(pk=self.test_confirm.pk)
+
+        self.assertTrue(confirm.is_rejected)
 
 
 class UploadPhotoTest(AuthUserMixin, TestCase):

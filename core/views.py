@@ -7,13 +7,13 @@ from django.db import DatabaseError
 from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
-from rest_framework.generics import UpdateAPIView
+from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView
 from rest_framework.parsers import FileUploadParser
-from rest_framework.permissions import IsAdminUser, BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
+from chat.models import Confirm
 from core.constants import BASE_ERROR_MSG
 from core.constants import MAX_MEETINGS
 from core.constants import MOSCOW_LAT
@@ -22,8 +22,10 @@ from core.constants import MOSCKOW_R
 
 
 from core.exceptions import UploadException
-from core.models import User, Meeting, UserPhotos
-from core.serializers import MeetingSerializer, JsonResponseSerializer as JRS, UserSerializerExtended, PhotoSerializer
+from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin
+from core.models import Meeting, UserPhotos
+from core.permissions import GeneralPermissionMixin
+from core.serializers import JsonResponseSerializer as JRS
 from core.utils import JsonResponse
 
 logger = logging.getLogger(__name__)
@@ -37,102 +39,6 @@ def api_root(request, format=None):
     return Response({
         'users': reverse('user-list', request=request),
     })
-
-
-class IsStaff(BasePermission):
-    def has_permission(self, request, view):
-        if request.user.is_staff:
-            return True
-
-
-class IsStaffOrTargetUser(IsStaff):
-    def has_permission(self, request, view):
-        if request.user.pk == view.kwargs.get('pk'):
-            return True
-
-        return super().has_permission(request, view)
-
-
-class IsStaffOrOwner(BasePermission):
-    def has_permission(self, request, view):
-
-        if request.user.is_anonymous():
-            return False
-
-        object_model = view.model
-
-        try:
-            model = object_model.objects.get(pk=view.kwargs['pk'])
-        except (object_model.DoesNotExist, KeyError):
-            return False
-
-        if not hasattr(model, 'owner'):
-            logger.error('Model {0} does not have a owner, but you use mixin IsStaffOrOwner'.format(model.__name__))
-            return False
-
-        if request.user.pk == model.owner.pk:
-            return True
-        return super().has_permission(request, view)
-
-
-class IsStaffOrMe(BasePermission):
-    def has_permission(self, request, view):
-        me = view.model
-        if request.user.pk == me.pk:
-            return True
-        return super().has_permission(request, view)
-
-
-class GeneralPermissionMixin(object):
-    def get_permissions(self):
-
-        if self.request.method == 'DELETE':
-            return [IsAdminUser()]
-
-        elif self.request.method == 'GET':  # only authorized users can see objects
-            return [IsAuthenticated()]
-
-        elif self.request.method == 'POST':  # only authorized users can create objects
-            return [IsAuthenticated()]
-
-        else:
-            return [self.who_can_update()]  # only owners can update objects
-
-
-class UserMixin(object):
-    model = User
-    serializer_class = UserSerializerExtended
-    queryset = User.objects.all()
-
-    who_can_update = IsStaffOrMe
-
-
-class MeetingMixin(object):
-    model = Meeting
-    serializer_class = MeetingSerializer
-    who_can_update = IsStaffOrOwner
-
-    queryset = Meeting.objects.all()
-    lat = None
-    lng = None
-    r = None
-
-    def get_queryset(self):
-        if (self.lat == None or self.lng == None or self.r == None):
-            return Meeting.objects.all()
-        radius = self.r * 1000
-        query = "select *  from core_meeting where ST_Distance_Sphere(coordinates, ST_MakePoint({lat},{lng})) <=  {r};".format(
-            lat=self.lat, lng=self.lng, r=radius)
-        return Meeting.objects.raw(query)
-
-
-class PhotoMixin(object):
-    model = UserPhotos
-    serializer_class = PhotoSerializer
-    who_can_update = IsStaffOrOwner
-
-    def get_queryset(self):
-        return UserPhotos.objects.all()
 
 
 class UserCreate(UserMixin, generics.CreateAPIView):
@@ -168,9 +74,6 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
             self.lng = MOSCOW_LNG
             self.r = MOSCKOW_R
         return super().get(request, *args, **kwargs)
-
-
-
 
 
 class MeetingDetail(GeneralPermissionMixin, MeetingMixin, generics.RetrieveUpdateAPIView):
@@ -264,3 +167,31 @@ class SetAvatar(GeneralPermissionMixin, PhotoMixin, UpdateAPIView):
             return Response(JRS(JsonResponse(status=500, msg=BASE_ERROR_MSG)).data)
 
         return Response(JRS(JsonResponse(status=200, msg='ok')).data)
+
+
+class ConfirmCreate(GeneralPermissionMixin, CreateAPIView):
+    def create(self, request, *args, **kwargs):
+
+        meeting_pk = kwargs['pk']
+        try:
+            meeting = Meeting.objects.get(pk=meeting_pk)
+        except Meeting.DoesNotExist:
+            return Response(JRS(JsonResponse(status=404, msg='meeting does not exist')).data)
+
+        if meeting.owner_id == request.user.id:
+            return Response(JRS(JsonResponse(status=400, msg='you can not confirm to your event')).data)
+
+        Confirm.objects.create(meeting=meeting, user=request.user)
+
+        return Response(JRS(JsonResponse(status=200, msg='ok')).data)
+
+
+class ConfirmsList(GeneralPermissionMixin, ConfirmMixin, ListAPIView):
+
+    def get(self, request, *args, **kwargs):
+        self.queryset = Confirm.objects.filter(meeting__owner=request.user, is_approved=False, is_rejected=False)
+        return super().get(request, *args, **kwargs)
+
+
+class AcceptConfirm(GeneralPermissionMixin, ConfirmMixin, UpdateAPIView):
+    pass
