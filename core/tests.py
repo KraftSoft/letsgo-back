@@ -349,18 +349,25 @@ class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
         self.assertTrue(confirm.is_rejected)
 
 
-class UploadPhotoTest(AuthUserMixin, TestCase):
-    def test_upload__ok(self):
-
-        file_name = 'test.jpeg'
-
+class UploadDeletePhotoTest(AuthUserMixin, TestCase):
+    def create_photo(self, file_name):
         image = Image.new('RGBA', size=(50, 50), color=(150, 150, 0))
         image.save(file_name)
-
         with patch.object(FileUploadView, 'check_mime_type', return_value=None):
             response = self.client.put(reverse('upload-photo', kwargs={'filename': file_name}), data=image, content_type='image/jpeg')
+        return response
 
+    def test_upload__ok(self):
+        file_name = 'test.jpeg'
+        response = self.create_photo(file_name)
         data = response.data
         self.assertEqual(data['status'], 204)
+        os.remove(file_name)
 
+    def test_delete(self):
+        file_name = 'pidoras.jpeg'
+        response_cr = self.create_photo(file_name)
+        response=self.client.delete(reverse('delete-photo', kwargs={'pk':1}))
+        data = response.data
+        self.assertEqual(data['status'], 204)
         os.remove(file_name)
