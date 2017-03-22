@@ -7,17 +7,25 @@ from django.db import DatabaseError
 from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
-from rest_framework.generics import UpdateAPIView
+from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView
 from rest_framework.parsers import FileUploadParser
-from rest_framework.permissions import IsAdminUser, BasePermission, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
+from chat.models import Confirm
 from core.constants import BASE_ERROR_MSG
+from core.constants import MAX_MEETINGS
+from core.constants import MOSCOW_LAT
+from core.constants import MOSCOW_LNG
+from core.constants import MOSCKOW_R
+
+
 from core.exceptions import UploadException
-from core.models import User, Meeting, UserPhotos
-from core.serializers import MeetingSerializer, JsonResponseSerializer as JRS, UserSerializerExtended, PhotoSerializer
+from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin
+from core.models import Meeting, UserPhotos
+from core.permissions import GeneralPermissionMixin
+from core.serializers import JsonResponseSerializer as JRS
 from core.utils import JsonResponse
 
 logger = logging.getLogger(__name__)
@@ -31,92 +39,6 @@ def api_root(request, format=None):
     return Response({
         'users': reverse('user-list', request=request),
     })
-
-
-class IsStaff(BasePermission):
-    def has_permission(self, request, view):
-        if request.user.is_staff:
-            return True
-
-
-class IsStaffOrTargetUser(IsStaff):
-    def has_permission(self, request, view):
-
-        if request.user.pk == view.kwargs.get('pk'):
-            return True
-
-        return super().has_permission(request, view)
-
-
-class IsStaffOrOwner(BasePermission):
-    def has_permission(self, request, view):
-
-        if request.user.is_anonymous():
-            return False
-
-        object_model = view.model
-
-        try:
-            model = object_model.objects.get(pk=view.kwargs['pk'])
-        except (object_model.DoesNotExist, KeyError):
-            return False
-
-        if not hasattr(model, 'owner'):
-            logger.error('Model {0} does not have a owner, but you use mixin IsStaffOrOwner'.format(model.__name__))
-            return False
-
-        if request.user.pk == model.owner.pk:
-            return True
-        return super().has_permission(request, view)
-
-
-class IsStaffOrMe(BasePermission):
-    def has_permission(self, request, view):
-        me = view.model
-        if request.user.pk == me.pk:
-            return True
-        return super().has_permission(request, view)
-
-
-class GeneralPermissionMixin(object):
-    def get_permissions(self):
-
-        if self.request.method == 'DELETE':
-            return [IsAdminUser()]
-
-        elif self.request.method == 'GET':  # only authorized users can see objects
-            return [IsAuthenticated()]
-
-        elif self.request.method == 'POST':  # only authorized users can create objects
-            return [IsAuthenticated()]
-
-        else:
-            return [self.who_can_update()]  # only owners can update objects
-
-
-class UserMixin(object):
-    model = User
-    serializer_class = UserSerializerExtended
-    queryset = User.objects.all()
-
-    who_can_update = IsStaffOrMe
-
-
-class MeetingMixin(object):
-    model = Meeting
-    serializer_class = MeetingSerializer
-    who_can_update = IsStaffOrOwner
-
-    queryset = Meeting.objects.all()
-
-
-class PhotoMixin(object):
-    model = UserPhotos
-    serializer_class = PhotoSerializer
-    who_can_update = IsStaffOrOwner
-
-    def get_queryset(self):
-        return UserPhotos.objects.all()
 
 
 class UserCreate(UserMixin, generics.CreateAPIView):
@@ -133,7 +55,25 @@ class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestr
 
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
+        user = request.user
+        count_meetings = Meeting.objects.filter(owner=user).count()
+        if count_meetings >= MAX_MEETINGS:
+            logger.warning(
+                'USER user_id={0} trying to create more than MAX_MEETINGS meetings'.format(self.request.user.id))
+            return Response(
+                JRS(JsonResponse(status=429, msg="user's trying to create more than MAX_MEETINGS meetings")).data)
         return super().post(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.lat = float(request.GET.get('lat'))
+            self.lng = float(request.GET.get('lng'))
+            self.r = float(request.GET.get('r'))
+        except (ValueError, TypeError):
+            self.lat = MOSCOW_LAT
+            self.lng = MOSCOW_LNG
+            self.r = MOSCKOW_R
+        return super().get(request, *args, **kwargs)
 
 
 class MeetingDetail(GeneralPermissionMixin, MeetingMixin, generics.RetrieveUpdateAPIView):
@@ -145,7 +85,6 @@ class AuthView(ObtainAuthToken):
 
 
 class FileUploadView(APIView):
-
     parser_classes = (FileUploadParser,)
 
     url_prefix = 'user-photos'
@@ -160,7 +99,8 @@ class FileUploadView(APIView):
         mime_type = magic.from_buffer(file_obj.read(), mime=True)
 
         if not re.match('image/', mime_type):
-            raise UploadException(response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
+            raise UploadException(
+                response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
 
     def save_file(self, filename, file_obj):
 
@@ -175,7 +115,9 @@ class FileUploadView(APIView):
             else:
                 UserPhotos.objects.create(owner=self.request.user, photo=full_path, is_avatar=True)
         except DatabaseError as e:
-            logger.error('Can not save photo for user_id={0}, photo_path: {1}\nError:{2}'.format(self.request.user.id, full_path, e))
+            logger.error(
+                'Can not save photo for user_id={0}, photo_path: {1}\nError:{2}'.format(self.request.user.id, full_path,
+                                                                                        e))
 
     def put(self, request, filename, format=None):
 
@@ -225,3 +167,31 @@ class SetAvatar(GeneralPermissionMixin, PhotoMixin, UpdateAPIView):
             return Response(JRS(JsonResponse(status=500, msg=BASE_ERROR_MSG)).data)
 
         return Response(JRS(JsonResponse(status=200, msg='ok')).data)
+
+
+class ConfirmCreate(GeneralPermissionMixin, CreateAPIView):
+    def create(self, request, *args, **kwargs):
+
+        meeting_pk = kwargs['pk']
+        try:
+            meeting = Meeting.objects.get(pk=meeting_pk)
+        except Meeting.DoesNotExist:
+            return Response(JRS(JsonResponse(status=404, msg='meeting does not exist')).data)
+
+        if meeting.owner_id == request.user.id:
+            return Response(JRS(JsonResponse(status=400, msg='you can not confirm to your event')).data)
+
+        Confirm.objects.create(meeting=meeting, user=request.user)
+
+        return Response(JRS(JsonResponse(status=200, msg='ok')).data)
+
+
+class ConfirmsList(GeneralPermissionMixin, ConfirmMixin, ListAPIView):
+
+    def get(self, request, *args, **kwargs):
+        self.queryset = Confirm.objects.filter(meeting__owner=request.user, is_approved=False, is_rejected=False)
+        return super().get(request, *args, **kwargs)
+
+
+class AcceptConfirm(GeneralPermissionMixin, ConfirmMixin, UpdateAPIView):
+    pass
