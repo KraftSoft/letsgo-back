@@ -66,6 +66,7 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
 
     def get(self, request, *args, **kwargs):
         try:
+            self.user_id = request._user.id
             self.lat = float(request.GET.get('lat'))
             self.lng = float(request.GET.get('lng'))
             self.r = float(request.GET.get('r'))

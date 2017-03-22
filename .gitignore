@@ -82,6 +82,9 @@ celerybeat-schedule
 
 # virtualenv
 env/
+core/migrations
+chat/migrations
+
 ENV/
 
 # Spyder project settings
@@ -95,4 +98,5 @@ ENV/
 secret.py
 conf/
 .*
+
 
