@@ -1,5 +1,7 @@
 API
+====
 Список мероприятий
+--------------------
 GET /meetings-list/
 Example request headers:
 GET /meetings-list/ HTTP/1.1
@@ -11,8 +13,10 @@ Host: 185.76.147.143
 User-Agent: HTTPie/0.9.6
 
 http 185.76.147.143/meetings-list/ 'Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2'
-Добавление мероприятия
 
+
+Добавление мероприятия
+-----------------------
 POST /meetings-list/
 Example request headers:
 User-Agent: curl/7.35.0
@@ -31,7 +35,9 @@ Content-Length: xxx
     }
 }
 curl -H "Content-Type: application/json" -H "Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2" -X POST -d '{"title": "title", "description": "desc", "coordinates": {"lat": 20, "lng":30}}' 185.76.147.143/meetings-list/
+
 Изменение юзера
+----------------
 PUT /user-detail/1/
 Example request headers:
 User-Agent: curl/7.35.0
