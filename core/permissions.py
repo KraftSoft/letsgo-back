@@ -60,7 +60,7 @@ class GeneralPermissionMixin(object):
     def get_permissions(self):
 
         if self.request.method == 'DELETE':
-            return [IsAdminUser()]
+            return [self.who_can_update()]
 
         elif self.request.method == 'GET':  # only authorized users can see objects
             return [IsAuthenticated()]

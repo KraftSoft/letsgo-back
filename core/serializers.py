@@ -6,6 +6,8 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.settings import api_settings
+from django.core.urlresolvers import reverse
+
 
 from chat.models import Confirm
 from core.models import User, Meeting, UserPhotos
@@ -64,13 +66,23 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
 class UserPhotoSerializer(serializers.ModelSerializer):
     photo = serializers.SerializerMethodField()
+    delete_photo = serializers.SerializerMethodField()
+    set_avatar = serializers.SerializerMethodField()
+
+    def get_delete_photo(self, obj):
+        result = reverse('delete-photo', kwargs={'pk':obj.id})
+        return build_absolute_url(result)
+
+    def get_set_avatar(self, obj):
+        result = reverse('set-avatar', kwargs={'pk':obj.id})
+        return build_absolute_url(result)
 
     def get_photo(self, obj):
         return build_absolute_url(obj.photo)
 
     class Meta:
         model = UserPhotos
-        fields = ('photo', )
+        fields = ('photo', 'delete_photo', 'set_avatar' )
 
 
 class PhotoSerializer(serializers.ModelSerializer):
