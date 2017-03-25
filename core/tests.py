@@ -354,6 +354,9 @@ class UploadDeletePhotoTest(AuthUserMixin, TestCase):
             content_type=False,
         )
 
+	return response
+
+
     def test_upload__ok(self):
         file_name = 'test.jpeg'
         response = self.create_photo(file_name)
