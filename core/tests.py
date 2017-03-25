@@ -13,6 +13,7 @@ import json
 import copy
 from core.views import FileUploadView
 from core.constants import MAX_MEETINGS
+from core.models import UserPhotos
 
 TEST_USER_1 = 'masha'
 TEST_USER_PW_1 = '0'
@@ -365,9 +366,11 @@ class UploadDeletePhotoTest(AuthUserMixin, TestCase):
         os.remove(file_name)
 
     def test_delete(self):
-        file_name = 'pidoras.jpeg'
+        file_name = 'kek.jpeg'
         response_cr = self.create_photo(file_name)
-        response=self.client.delete(reverse('delete-photo', kwargs={'pk':1}))
+        photos = list(UserPhotos.objects.all())
+        kek_id = photos[0].id
+        response=self.client.delete(reverse('delete-photo', kwargs={'pk':kek_id}))
         data = response.data
         self.assertEqual(data['status'], 204)
         os.remove(file_name)

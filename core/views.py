@@ -20,7 +20,6 @@ from core.constants import MOSCOW_LAT
 from core.constants import MOSCOW_LNG
 from core.constants import MOSCKOW_R
 
-
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin
 from core.models import Meeting, UserPhotos
@@ -138,17 +137,19 @@ class FileUploadView(APIView):
 
         return Response(JRS(JsonResponse(status=204, msg='ok')).data)
 
+
 class DeletePhoto(GeneralPermissionMixin, PhotoMixin, DestroyAPIView):
     parser_classes = (FileUploadParser,)
     url_prefix = 'user-photos'
     storage = default_storage
-    def delete(self, request, *args, **kwargs ):
+
+    def delete(self, request, *args, **kwargs):
         id = kwargs['pk']
         file_path = None
         try:
-            target_photo = UserPhotos.objects.get(owner=self.request.user, id = id)
+            target_photo = UserPhotos.objects.get(owner=self.request.user, id=id)
             file_path = target_photo.photo
-            UserPhotos.objects.filter(owner=self.request.user, id = id).delete()
+            UserPhotos.objects.filter(owner=self.request.user, id=id).delete()
 
         except OSError as e:
             logger.error(
@@ -171,6 +172,7 @@ class DeletePhoto(GeneralPermissionMixin, PhotoMixin, DestroyAPIView):
             return Response(JRS(JsonResponse(status=500, msg=BASE_ERROR_MSG)).data)
 
         return Response(JRS(JsonResponse(status=204, msg='ok')).data)
+
 
 class SetAvatar(GeneralPermissionMixin, PhotoMixin, UpdateAPIView):
     def put(self, request, *args, **kwargs):
@@ -202,6 +204,7 @@ class SetAvatar(GeneralPermissionMixin, PhotoMixin, UpdateAPIView):
 
         return Response(JRS(JsonResponse(status=200, msg='ok')).data)
 
+
 class ConfirmCreate(GeneralPermissionMixin, CreateAPIView):
     def create(self, request, *args, **kwargs):
 
@@ -220,7 +223,6 @@ class ConfirmCreate(GeneralPermissionMixin, CreateAPIView):
 
 
 class ConfirmsList(GeneralPermissionMixin, ConfirmMixin, ListAPIView):
-
     def get(self, request, *args, **kwargs):
         self.queryset = Confirm.objects.filter(meeting__owner=request.user, is_approved=False, is_rejected=False)
         return super().get(request, *args, **kwargs)
