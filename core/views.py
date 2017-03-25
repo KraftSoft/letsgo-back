@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 
 import magic
@@ -96,8 +97,8 @@ class FileUploadView(APIView):
             raise UploadException(response=JsonResponse(status=400, msg='error: no file in request'))
 
     def check_mime_type(self, file_obj):
-        mime_type = magic.from_buffer(file_obj.read(), mime=True)
 
+        mime_type = magic.from_file(file_obj.name, mime=True)
         if not re.match('image/', mime_type):
             raise UploadException(
                 response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))

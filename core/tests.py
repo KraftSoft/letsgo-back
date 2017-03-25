@@ -162,7 +162,6 @@ class MeetingTests(MeetingMixin, TestCase):
             return response
 
 
-
     def test_meeting_get_inradius(self):
         client1 = client_creation("vasyan", "qwerty")
         client2 = client_creation("petyan", "qwerty")
@@ -357,8 +356,12 @@ class UploadPhotoTest(AuthUserMixin, TestCase):
         image = Image.new('RGBA', size=(50, 50), color=(150, 150, 0))
         image.save(file_name)
 
-        with patch.object(FileUploadView, 'check_mime_type', return_value=None):
-            response = self.client.put(reverse('upload-photo', kwargs={'filename': file_name}), data=image, content_type='image/jpeg')
+        response = self.client.put(
+            reverse('upload-photo', kwargs={'filename': file_name}),
+            data=image,
+            accept_encoding='gzip, deflate',
+            content_type=False,
+        )
 
         data = response.data
         self.assertEqual(data['status'], 204)
