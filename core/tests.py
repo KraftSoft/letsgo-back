@@ -13,6 +13,7 @@ import json
 import copy
 from core.views import FileUploadView
 from core.constants import MAX_MEETINGS
+from core.models import UserPhotos
 
 TEST_USER_1 = 'masha'
 TEST_USER_PW_1 = '0'
@@ -48,7 +49,6 @@ def check_json(data, fields):
 
 class AuthUserMixin(object):
     def setUp(self):
-
         self.test_user = User.objects.create(username=TEST_USER_1)
         self.test_user.set_password(TEST_USER_PW_1)
         self.test_user.save()
@@ -76,6 +76,7 @@ class MeetingMixin(AuthUserMixin):
                                                      owner=self.test_user,
                                                      coordinates=point)
 
+
 class ConfirmMixin(MeetingMixin):
     def setUp(self):
         super().setUp()
@@ -84,7 +85,6 @@ class ConfirmMixin(MeetingMixin):
 
 
 class UserTests(AuthUserMixin, TestCase):
-
     def setUp(self):
         super().setUp()
 
@@ -106,7 +106,6 @@ class UserTests(AuthUserMixin, TestCase):
 
 
 class MeetingTests(MeetingMixin, TestCase):
-
     def setUp(self):
         super().setUp()
 
@@ -147,44 +146,43 @@ class MeetingTests(MeetingMixin, TestCase):
         data = response.data
         check_json(data, fields)
 
-    def create_meeting(self, lat, lng, title, creator = None):
+    def create_meeting(self, lat, lng, title, creator=None):
         desc = title + "desk"
         coords = {
             'lat': lat,
             'lng': lng
         }
         request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords})
-        if(creator != None):
+        if (creator != None):
             response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
             return response
         else:
             response = self.client.post(reverse('meetings-list'), request_data, content_type='application/json')
             return response
 
-
     def test_meeting_get_inradius(self):
         client1 = client_creation("vasyan", "qwerty")
         client2 = client_creation("petyan", "qwerty")
-        for i in range (0, 3):
-            response = self.create_meeting(i , i , "title" + str(i), client1)
-        for i in range (3, 6):
-            response = self.create_meeting(i , i , "title" + str(i), client2)
+        for i in range(0, 3):
+            response = self.create_meeting(i, i, "title" + str(i), client1)
+        for i in range(3, 6):
+            response = self.create_meeting(i, i, "title" + str(i), client2)
 
         test_url = reverse('meetings-list') + "?lng={lng}&lat={lat}&r={r}"
-        response = self.client.get(test_url.format(lng = 2, lat = 2, r = 1))
+        response = self.client.get(test_url.format(lng=2, lat=2, r=1))
         data = response.data
         self.assertEqual(len(data), 1)
-        response = self.client.get(test_url.format(lng = 2.2, lat = 2.2, r = 200))
+        response = self.client.get(test_url.format(lng=2.2, lat=2.2, r=200))
         data = response.data
         self.assertEqual(len(data), 3)
-        response = self.client.get(test_url.format(lng = 2.2, lat = 2.2, r = 10000000000000))
+        response = self.client.get(test_url.format(lng=2.2, lat=2.2, r=10000000000000))
         data = response.data
         self.assertEqual(len(data), 8)
 
     def test_4_meeting_add(self):
         client1 = client_creation("vasyan", "qwerty")
-        for i in range (0, 5):
-            response = self.create_meeting(i , i , "title" + str(i), client1)
+        for i in range(0, 5):
+            response = self.create_meeting(i, i, "title" + str(i), client1)
             data = response.data
             status_code = data.get('status', None)
             if i < MAX_MEETINGS:
@@ -195,7 +193,7 @@ class MeetingTests(MeetingMixin, TestCase):
 
     def test_meeting_get_baddata(self):
         test_url = reverse('meetings-list') + "?lng={lng}&lat={lat}&r={r}"
-        response = self.client.get(test_url.format(lng = "kek", lat = 2.2, r = "lol"))
+        response = self.client.get(test_url.format(lng="kek", lat=2.2, r="lol"))
         data = response.data
         response_all = self.client.get(reverse('meetings-list'))
         data_all = response_all.data
@@ -203,7 +201,6 @@ class MeetingTests(MeetingMixin, TestCase):
 
 
 class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
-
     NEW_MEET_TITLE = 'New meeting title'
 
     NEW_MEET_DESC = 'New meeting desc'
@@ -218,7 +215,6 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
 
     def setUp(self):
         super().setUp()
-
 
     def test_update_user(self):
         NEW_USER_NAME = 'july'
@@ -269,14 +265,14 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
 
         response = client.put(
             reverse('meeting-detail', kwargs={'pk': self.test_meeting_1.pk}),
-                json.dumps({
-                    'title': self.NEW_MEET_TITLE,
-                    'description': self.NEW_MEET_DESC,
-                    'coordinates': self.coords
-                }),
+            json.dumps({
+                'title': self.NEW_MEET_TITLE,
+                'description': self.NEW_MEET_DESC,
+                'coordinates': self.coords
+            }),
             content_type='application/json',
-            )
-        self.assertEqual(response.status_code, 401 )
+        )
+        self.assertEqual(response.status_code, 401)
 
     def test_wrong_user(self):
         ##user 3
@@ -284,7 +280,7 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
         test_user3.set_password(TEST_USER_PW_3)
         test_user3.save()
 
-        token3, _ = Token.objects.get_or_create(user = test_user3)
+        token3, _ = Token.objects.get_or_create(user=test_user3)
         token_key3 = token3.key
         token3 = 'Token {}'.format(token_key3)
 
@@ -293,14 +289,14 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
 
         response = client3.put(
             reverse('meeting-detail', kwargs={'pk': self.test_meeting_1.pk}),
-                json.dumps({
-                    'title': self.NEW_MEET_TITLE,
-                    'description': self.NEW_MEET_DESC,
-                    'coordinates': self.coords
-                }),
+            json.dumps({
+                'title': self.NEW_MEET_TITLE,
+                'description': self.NEW_MEET_DESC,
+                'coordinates': self.coords
+            }),
             content_type='application/json',
-            )
-        self.assertEqual(response.status_code, 401 )
+        )
+        self.assertEqual(response.status_code, 401)
 
 
 class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
@@ -308,7 +304,6 @@ class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
         super().setUp()
 
     def test_approve__success(self):
-
         self.assertFalse(self.test_confirm.is_approved)
 
         response = self.client.put(
@@ -328,7 +323,6 @@ class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
         self.assertTrue(confirm.is_approved)
 
     def test_reject__success(self):
-
         self.assertFalse(self.test_confirm.is_rejected)
 
         response = self.client.put(
@@ -348,11 +342,8 @@ class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
         self.assertTrue(confirm.is_rejected)
 
 
-class UploadPhotoTest(AuthUserMixin, TestCase):
-    def test_upload__ok(self):
-
-        file_name = 'test.jpeg'
-
+class UploadDeletePhotoTest(AuthUserMixin, TestCase):
+    def create_photo(self, file_name):
         image = Image.new('RGBA', size=(50, 50), color=(150, 150, 0))
         image.save(file_name)
 
@@ -363,7 +354,19 @@ class UploadPhotoTest(AuthUserMixin, TestCase):
             content_type=False,
         )
 
+    def test_upload__ok(self):
+        file_name = 'test.jpeg'
+        response = self.create_photo(file_name)
         data = response.data
         self.assertEqual(data['status'], 204)
+        os.remove(file_name)
 
+    def test_delete(self):
+        file_name = 'kek.jpeg'
+        response_cr = self.create_photo(file_name)
+        photos = list(UserPhotos.objects.all())
+        kek_id = photos[0].id
+        response = self.client.delete(reverse('delete-photo', kwargs={'pk': kek_id}))
+        data = response.data
+        self.assertEqual(data['status'], 204)
         os.remove(file_name)
