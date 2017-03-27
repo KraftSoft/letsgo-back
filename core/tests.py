@@ -76,6 +76,7 @@ class MeetingMixin(AuthUserMixin):
                                                      owner=self.test_user,
                                                      coordinates=point)
 
+
 class ConfirmMixin(MeetingMixin):
     def setUp(self):
         super().setUp()
@@ -149,19 +150,19 @@ class MeetingTests(MeetingMixin, TestCase):
 
     def create_meeting(self, lat, lng, title, creator = None):
         desc = title + "desk"
+
         coords = {
             'lat': lat,
             'lng': lng
         }
+
         request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords})
-        if(creator != None):
+        if creator != None:
             response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
             return response
         else:
             response = self.client.post(reverse('meetings-list'), request_data, content_type='application/json')
             return response
-
-
 
     def test_meeting_get_inradius(self):
         client1 = client_creation("vasyan", "qwerty")
@@ -219,7 +220,6 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
 
     def setUp(self):
         super().setUp()
-
 
     def test_update_user(self):
         NEW_USER_NAME = 'july'
