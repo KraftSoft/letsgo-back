@@ -58,9 +58,11 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
         count_meetings = Meeting.objects.filter(owner=user).count()
         if count_meetings >= MAX_MEETINGS:
             logger.warning(
-                'USER user_id={0} trying to create more than MAX_MEETINGS meetings'.format(self.request.user.id))
+                'USER user_id={0} trying to create more than MAX_MEETINGS '
+                'meetings'.format(self.request.user.id))
             return Response(
-                JRS(JsonResponse(status=429, msg="user's trying to create more than MAX_MEETINGS meetings")).data)
+                JRS(JsonResponse(status=429, msg="user's trying to create more than "
+                                                 "MAX_MEETINGS meetings")).data)
         return super().post(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):

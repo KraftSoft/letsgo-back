@@ -29,6 +29,7 @@ class Meeting(models.Model):
     subway = models.ForeignKey(Subway, null=True, blank=True, related_name='meetings')
     coordinates = gis_models.PointField(null=True, blank=False)
     date_create = models.DateTimeField(auto_now=True)
+    meeting_date = models.DateTimeField(auto_now=True)
     last_modify = models.DateTimeField(auto_now_add=True)
 
 

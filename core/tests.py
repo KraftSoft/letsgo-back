@@ -14,6 +14,8 @@ import copy
 from core.views import FileUploadView
 from core.constants import MAX_MEETINGS
 from core.models import UserPhotos
+from datetime import datetime
+
 
 TEST_USER_1 = 'masha'
 TEST_USER_PW_1 = '0'
@@ -30,6 +32,12 @@ MEETING_DESC_1 = 'Party for everybody :)'
 MEETING_TITLE_2 = 'go drink'
 MEETING_DESC_2 = 'Party for everybody :)'
 
+MEETING_DATE_1 = datetime.today()
+
+def datetime_handler(x):
+    if isinstance(x, datetime):
+        return x.isoformat()
+    raise TypeError("Unknown type")
 
 def client_creation(username, password):
     test_user = User.objects.create(username=username)
@@ -66,15 +74,20 @@ class MeetingMixin(AuthUserMixin):
         super().setUp()
 
         point = Point(55.751244, 37.618423)  # Moscow
+
         self.test_meeting_1 = Meeting.objects.create(title=MEETING_TITLE_1,
                                                      description=MEETING_DESC_1,
                                                      owner=self.test_user,
-                                                     coordinates=point)
+                                                     coordinates=point,
+                                                     meeting_date=datetime.today()
+                                                     )
 
         self.test_meeting_2 = Meeting.objects.create(title=MEETING_TITLE_2,
                                                      description=MEETING_DESC_2,
                                                      owner=self.test_user,
-                                                     coordinates=point)
+                                                     coordinates=point,
+                                                     meeting_date=datetime.today()
+                                                     )
 
 
 class ConfirmMixin(MeetingMixin):
@@ -137,7 +150,10 @@ class MeetingTests(MeetingMixin, TestCase):
             'lng': 39.729996
         }  # Sochi
 
-        request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords})
+        date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+
+        request_data = json.dumps({'title': title, 'description': desc,
+                                   'coordinates': coords, 'meeting_date':date})
 
         response = self.client.post(reverse('meetings-list'), request_data, content_type='application/json')
 
@@ -152,7 +168,11 @@ class MeetingTests(MeetingMixin, TestCase):
             'lat': lat,
             'lng': lng
         }
-        request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords})
+        date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+
+        #Date has wrong format. Use one of these formats instead: YYYY[-MM[-DD]].
+        request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords,
+                                   'meeting_date':date})
         if (creator != None):
             response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
             return response
@@ -221,6 +241,11 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
         NEW_ABOUT = 'bla bla bla'
         NEW_FN = 'Юля'
 
+        check = json.dumps({
+                'username': NEW_USER_NAME,
+                'about': NEW_ABOUT,
+                'first_name': NEW_FN
+            }),
         response = self.client.put(
             reverse('user-detail', kwargs={'pk': self.test_user.pk}),
             json.dumps({
@@ -232,8 +257,9 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
         )
 
         fields = ('id', 'first_name', 'about', 'username')
+        data = response.data
 
-        check_json(response.data, fields)
+        check_json(data, fields)
 
         self.assertEqual(response.data['username'], NEW_USER_NAME)
         self.assertEqual(response.data['first_name'], NEW_FN)
@@ -245,13 +271,14 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
             json.dumps({
                 'title': self.NEW_MEET_TITLE,
                 'description': self.NEW_MEET_DESC,
-                'coordinates': self.coords
+                'coordinates': self.coords,
+                'meeting_date':MEETING_DATE_1.strftime("%Y-%m-%d %H:%M:%S")
             }),
-            content_type='application/json',
+            content_type='application/json'
         )
 
         data = response.data
-        fields = ('id', 'title', 'description', 'coordinates', 'owner')
+        fields = ('id', 'title', 'description', 'coordinates', 'owner', 'meeting_date')
         check_json(data, fields)
         self.assertEqual(data['title'], self.NEW_MEET_TITLE)
         self.assertEqual(data['description'], self.NEW_MEET_DESC)
@@ -268,7 +295,7 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
             json.dumps({
                 'title': self.NEW_MEET_TITLE,
                 'description': self.NEW_MEET_DESC,
-                'coordinates': self.coords
+                'coordinates': self.coords,
             }),
             content_type='application/json',
         )

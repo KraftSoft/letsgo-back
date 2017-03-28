@@ -17,6 +17,7 @@ class MeetingMixin(object):
     serializer_class = MeetingSerializer
     who_can_update = IsStaffOrOwner
 
+
     queryset = Meeting.objects.all()
     lat = None
     lng = None
