@@ -7,7 +7,7 @@ from django.db import DatabaseError
 from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
-from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView
+from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView, DestroyAPIView
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
@@ -19,7 +19,6 @@ from core.constants import MAX_MEETINGS
 from core.constants import MOSCOW_LAT
 from core.constants import MOSCOW_LNG
 from core.constants import MOSCKOW_R
-
 
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin
@@ -66,6 +65,7 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
 
     def get(self, request, *args, **kwargs):
         try:
+            self.user_id = request._user.id
             self.lat = float(request.GET.get('lat'))
             self.lng = float(request.GET.get('lng'))
             self.r = float(request.GET.get('r'))
@@ -138,6 +138,42 @@ class FileUploadView(APIView):
         return Response(JRS(JsonResponse(status=204, msg='ok')).data)
 
 
+class DeletePhoto(GeneralPermissionMixin, PhotoMixin, DestroyAPIView):
+    parser_classes = (FileUploadParser,)
+    url_prefix = 'user-photos'
+    storage = default_storage
+
+    def delete(self, request, *args, **kwargs):
+        id = kwargs['pk']
+        file_path = None
+        try:
+            target_photo = UserPhotos.objects.get(owner=self.request.user, id=id)
+            file_path = target_photo.photo
+            UserPhotos.objects.filter(owner=self.request.user, id=id).delete()
+
+        except OSError as e:
+            logger.error(
+                'Path to file does not exist file={0}\nError: {1}'.format(file_path, e))
+            return Response(JRS(JsonResponse(status=400, msg='Path to file does not exist')).data)
+
+        except UserPhotos.DoesNotExist as e:
+            logger.error(
+                'User does not exists user_id={0}, photo_id: {1}\nError: {2}'.format(self.request.user.id, id, e))
+            return Response(JRS(JsonResponse(status=400, msg='user does not exists')).data)
+
+        except UserPhotos.MultipleObjectsReturned as e:
+            logger.error(
+                'Duplicate key for user_id={0}, photo_id: {1}\nError: {2}'.format(self.request.user.id, id, e))
+            return Response(JRS(JsonResponse(status=500, msg=BASE_ERROR_MSG)).data)
+
+        except DatabaseError as e:
+            logger.error(
+                'Can not set avatar for user_id={0}, photo_id: {1}\nError: {2}'.format(self.request.user.id, id, e))
+            return Response(JRS(JsonResponse(status=500, msg=BASE_ERROR_MSG)).data)
+
+        return Response(JRS(JsonResponse(status=204, msg='ok')).data)
+
+
 class SetAvatar(GeneralPermissionMixin, PhotoMixin, UpdateAPIView):
     def put(self, request, *args, **kwargs):
 
@@ -187,7 +223,6 @@ class ConfirmCreate(GeneralPermissionMixin, CreateAPIView):
 
 
 class ConfirmsList(GeneralPermissionMixin, ConfirmMixin, ListAPIView):
-
     def get(self, request, *args, **kwargs):
         self.queryset = Confirm.objects.filter(meeting__owner=request.user, is_approved=False, is_rejected=False)
         return super().get(request, *args, **kwargs)

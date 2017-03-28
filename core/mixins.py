@@ -30,6 +30,7 @@ class MeetingMixin(object):
             lat=self.lat, lng=self.lng, r=radius)
         return Meeting.objects.raw(query)
 
+
 class PhotoMixin(object):
     model = UserPhotos
     serializer_class = PhotoSerializer
