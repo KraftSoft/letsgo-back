@@ -82,8 +82,8 @@ celerybeat-schedule
 
 # virtualenv
 env/
-core/migrations/*
-chat/migrations/*
+#core/migrations/*
+#chat/migrations/*
 
 ENV/
 
