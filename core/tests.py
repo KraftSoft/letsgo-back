@@ -169,11 +169,9 @@ class MeetingTests(MeetingMixin, TestCase):
             'lng': lng
         }
         date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-
-        #Date has wrong format. Use one of these formats instead: YYYY[-MM[-DD]].
         request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords,
                                    'meeting_date':date})
-        if (creator != None):
+        if (creator is None):
             response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
             return response
         else:
