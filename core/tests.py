@@ -4,6 +4,7 @@ from PIL import Image
 from django.core.urlresolvers import reverse
 from django.test import TestCase, TransactionTestCase
 from django.test import Client
+from django.utils import timezone
 
 from chat.models import Confirm
 from core.models import User, Meeting
@@ -14,8 +15,8 @@ import copy
 from core.views import FileUploadView
 from core.constants import MAX_MEETINGS
 from core.models import UserPhotos
-from datetime import datetime
 
+timezone.now()
 
 TEST_USER_1 = 'masha'
 TEST_USER_PW_1 = '0'
@@ -32,12 +33,8 @@ MEETING_DESC_1 = 'Party for everybody :)'
 MEETING_TITLE_2 = 'go drink'
 MEETING_DESC_2 = 'Party for everybody :)'
 
-MEETING_DATE_1 = datetime.today()
+MEETING_DATE_1 = timezone.now()
 
-def datetime_handler(x):
-    if isinstance(x, datetime):
-        return x.isoformat()
-    raise TypeError("Unknown type")
 
 def client_creation(username, password):
     test_user = User.objects.create(username=username)
@@ -79,14 +76,14 @@ class MeetingMixin(AuthUserMixin):
                                                      description=MEETING_DESC_1,
                                                      owner=self.test_user,
                                                      coordinates=point,
-                                                     meeting_date=datetime.today()
+                                                     meeting_date=timezone.now()
                                                      )
 
         self.test_meeting_2 = Meeting.objects.create(title=MEETING_TITLE_2,
                                                      description=MEETING_DESC_2,
                                                      owner=self.test_user,
                                                      coordinates=point,
-                                                     meeting_date=datetime.today()
+                                                     meeting_date=timezone.now()
                                                      )
 
 
@@ -122,6 +119,23 @@ class MeetingTests(MeetingMixin, TestCase):
     def setUp(self):
         super().setUp()
 
+    def create_meeting(self, lat, lng, title, creator=None):
+        desc = title + "desk"
+        coords = {
+            'lat': lat,
+            'lng': lng
+        }
+        date = timezone.now().isoformat()
+        print(date)
+        request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords,
+                                   'meeting_date': date})
+        if (creator is not None):
+            response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
+            return response
+        else:
+            response = self.client.post(reverse('meetings-list'), request_data, content_type='application/json')
+            return response
+
     def test_list_meetings(self):
         response = self.client.get(reverse('meetings-list'), )
 
@@ -143,49 +157,22 @@ class MeetingTests(MeetingMixin, TestCase):
 
     def test_meeting_create(self):
         title = 'test meeting title'
-        desc = 'test meeting desc'
-
-        coords = {
-            'lat': 43.588348,
-            'lng': 39.729996
-        }  # Sochi
-
-        date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-
-        request_data = json.dumps({'title': title, 'description': desc,
-                                   'coordinates': coords, 'meeting_date':date})
-
-        response = self.client.post(reverse('meetings-list'), request_data, content_type='application/json')
-
-        fields = ('id', 'title', 'description', 'owner', 'subway', 'coordinates')
-
+        response = self.create_meeting(43.588348, 39.729996, title, self.client)
+        fields = ('id', 'title', 'description', 'owner', 'subway', 'coordinates', 'meeting_date')
         data = response.data
         check_json(data, fields)
-
-    def create_meeting(self, lat, lng, title, creator=None):
-        desc = title + "desk"
-        coords = {
-            'lat': lat,
-            'lng': lng
-        }
-        date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
-        request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords,
-                                   'meeting_date':date})
-        if (creator is None):
-            response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
-            return response
-        else:
-            response = self.client.post(reverse('meetings-list'), request_data, content_type='application/json')
-            return response
+        kek = 1
 
     def test_meeting_get_inradius(self):
         client1 = client_creation("vasyan", "qwerty")
         client2 = client_creation("petyan", "qwerty")
+        check = list(Meeting.objects.all())
+
         for i in range(0, 3):
             response = self.create_meeting(i, i, "title" + str(i), client1)
         for i in range(3, 6):
             response = self.create_meeting(i, i, "title" + str(i), client2)
-
+        check = list(Meeting.objects.all())
         test_url = reverse('meetings-list') + "?lng={lng}&lat={lat}&r={r}"
         response = self.client.get(test_url.format(lng=2, lat=2, r=1))
         data = response.data
@@ -300,7 +287,6 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_wrong_user(self):
-        ##user 3
         test_user3 = User.objects.create(username=TEST_USER_3)
         test_user3.set_password(TEST_USER_PW_3)
         test_user3.save()
