@@ -126,7 +126,6 @@ class MeetingTests(MeetingMixin, TestCase):
             'lng': lng
         }
         date = timezone.now().isoformat()
-        print(date)
         request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords,
                                    'meeting_date': date})
         if (creator is not None):
