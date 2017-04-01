@@ -145,16 +145,29 @@ class LocationSerializer(serializers.Field):
             'lng': instance.coords[1],
         }
 
+class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
+
+    UPDATE_AVAILABLE_FIELDS = ('is_approved', 'is_rejected')
+
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = Confirm
+        fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected')
 
 class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
-    UPDATE_AVAILABLE_FIELDS = ('title', 'description', 'coordinates')
+    UPDATE_AVAILABLE_FIELDS = ('title', 'description', 'coordinates', 'meeting_date')
 
     owner = UserSerializerExtended(required=False)
 
     coordinates = LocationSerializer(read_only=False)
 
     href = serializers.SerializerMethodField()
+
+    confirms = ConfirmSerializer(required=False)
+
+    meeting_date = serializers.DateTimeField(required=True)
 
     def get_href(self, obj):
         return reverse_full('meeting-detail', kwargs={'pk': obj.id})
@@ -173,6 +186,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
             title=validated_data['title'],
             description=validated_data['description'],
             coordinates=validated_data['coordinates'],
+            meeting_date=validated_data['meeting_date'],
             owner_id=user.id,
         )
         meeting.save()
@@ -181,7 +195,8 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ('id', 'title', 'description', 'owner', 'coordinates', 'subway', 'href')
+        fields = ('id', 'title', 'meeting_date' , 'description',
+                  'owner', 'coordinates', 'subway', 'href', 'confirms')
 
 
 class JsonResponseSerializer(serializers.Serializer):
@@ -196,13 +211,9 @@ class JsonResponseSerializer(serializers.Serializer):
     msg = serializers.CharField(max_length=512)
 
 
-class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
-
-    UPDATE_AVAILABLE_FIELDS = ('is_approved', 'is_rejected')
-
-    meeting = MeetingSerializer(read_only=True)
-    user = UserSerializer(read_only=True)
+class ConfirmExtendedSerializer(ConfirmSerializer):
+    meeting = MeetingSerializer(required=False)
 
     class Meta:
         model = Confirm
-        fields = ('id', 'meeting', 'user', 'date_create', 'is_approved', 'is_rejected')
+        fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected', 'meeting')

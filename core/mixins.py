@@ -16,14 +16,13 @@ class MeetingMixin(object):
     model = Meeting
     serializer_class = MeetingSerializer
     who_can_update = IsStaffOrOwner
-
     queryset = Meeting.objects.all()
     lat = None
     lng = None
     r = None
 
     def get_queryset(self):
-        if (self.lat == None or self.lng == None or self.r == None):
+        if (self.lat is None or self.lng is None or self.r is None):
             return Meeting.objects.all()
         radius = self.r * 1000
         query = "select *  from core_meeting where ST_Distance_Sphere(coordinates, ST_MakePoint({lat},{lng})) <=  {r};".format(
