@@ -35,6 +35,9 @@ MEETING_DESC_2 = 'Party for everybody :)'
 
 MEETING_DATE_1 = timezone.now()
 
+PAIR_MEETING = 0
+GROUP_MEETING = 1
+
 
 def client_creation(username, password):
     test_user = User.objects.create(username=username)
@@ -76,14 +79,16 @@ class MeetingMixin(AuthUserMixin):
                                                      description=MEETING_DESC_1,
                                                      owner=self.test_user,
                                                      coordinates=point,
-                                                     meeting_date=timezone.now()
+                                                     meeting_date=timezone.now(),
+                                                     group_type=GROUP_MEETING
                                                      )
 
         self.test_meeting_2 = Meeting.objects.create(title=MEETING_TITLE_2,
                                                      description=MEETING_DESC_2,
                                                      owner=self.test_user,
                                                      coordinates=point,
-                                                     meeting_date=timezone.now()
+                                                     meeting_date=timezone.now(),
+                                                     group_type=GROUP_MEETING
                                                      )
 
 
@@ -119,7 +124,7 @@ class MeetingTests(MeetingMixin, TestCase):
     def setUp(self):
         super().setUp()
 
-    def create_meeting(self, lat, lng, title, creator=None):
+    def create_meeting(self, lat, lng, title, creator=None, group_type=0):
         desc = title + "desk"
         coords = {
             'lat': lat,
@@ -127,7 +132,7 @@ class MeetingTests(MeetingMixin, TestCase):
         }
         date = timezone.now().isoformat()
         request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords,
-                                   'meeting_date': date})
+                                   'meeting_date': date, 'group_type': group_type})
         if (creator is not None):
             response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
             return response
@@ -147,7 +152,7 @@ class MeetingTests(MeetingMixin, TestCase):
         response = self.client.get(reverse('meeting-detail', kwargs={'pk': self.test_meeting_1.pk}))
         data = response.data
 
-        fields = ('id', 'title', 'description', 'owner', 'subway')
+        fields = ('id', 'title', 'description', 'owner', 'subway', 'group_type')
         check_json(data, fields)
 
         self.assertEqual(data['title'], MEETING_TITLE_1)
@@ -157,21 +162,18 @@ class MeetingTests(MeetingMixin, TestCase):
     def test_meeting_create(self):
         title = 'test meeting title'
         response = self.create_meeting(43.588348, 39.729996, title, self.client)
-        fields = ('id', 'title', 'description', 'owner', 'subway', 'coordinates', 'meeting_date')
+        fields = ('id', 'title', 'description', 'owner', 'subway',
+                  'coordinates', 'meeting_date', 'group_type')
         data = response.data
         check_json(data, fields)
-        kek = 1
 
     def test_meeting_get_inradius(self):
         client1 = client_creation("vasyan", "qwerty")
         client2 = client_creation("petyan", "qwerty")
-        check = list(Meeting.objects.all())
-
         for i in range(0, 3):
             response = self.create_meeting(i, i, "title" + str(i), client1)
         for i in range(3, 6):
             response = self.create_meeting(i, i, "title" + str(i), client2)
-        check = list(Meeting.objects.all())
         test_url = reverse('meetings-list') + "?lng={lng}&lat={lat}&r={r}"
         response = self.client.get(test_url.format(lng=2, lat=2, r=1))
         data = response.data
@@ -256,13 +258,14 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
                 'title': self.NEW_MEET_TITLE,
                 'description': self.NEW_MEET_DESC,
                 'coordinates': self.coords,
-                'meeting_date':MEETING_DATE_1.strftime("%Y-%m-%d %H:%M:%S")
+                'meeting_date': MEETING_DATE_1.strftime("%Y-%m-%d %H:%M:%S"),
+                'group_type': GROUP_MEETING
             }),
             content_type='application/json'
         )
 
         data = response.data
-        fields = ('id', 'title', 'description', 'coordinates', 'owner', 'meeting_date')
+        fields = ('id', 'title', 'description', 'coordinates', 'owner', 'meeting_date', 'group_type')
         check_json(data, fields)
         self.assertEqual(data['title'], self.NEW_MEET_TITLE)
         self.assertEqual(data['description'], self.NEW_MEET_DESC)

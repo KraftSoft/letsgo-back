@@ -32,6 +32,9 @@ class Meeting(models.Model):
     meeting_date = models.DateTimeField()
     last_modify = models.DateTimeField(auto_now_add=True)
 
+    GROUP_CHOISES = ((('two', 'Pair'), ('mul', 'Group')))
+    group_type = models.SmallIntegerField(choices=GROUP_CHOISES)
+
 
 class UserPhotos(models.Model):
     owner = models.ForeignKey(User, related_name='photos')

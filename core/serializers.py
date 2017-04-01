@@ -145,15 +145,15 @@ class LocationSerializer(serializers.Field):
             'lng': instance.coords[1],
         }
 
+
 class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
-
     UPDATE_AVAILABLE_FIELDS = ('is_approved', 'is_rejected')
-
     user = UserSerializer(read_only=True)
 
     class Meta:
         model = Confirm
         fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected')
+
 
 class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
@@ -168,6 +168,8 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
     confirms = ConfirmSerializer(required=False)
 
     meeting_date = serializers.DateTimeField(required=True)
+
+    group_type = serializers.IntegerField(required=True)
 
     def get_href(self, obj):
         return reverse_full('meeting-detail', kwargs={'pk': obj.id})
@@ -188,6 +190,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
             coordinates=validated_data['coordinates'],
             meeting_date=validated_data['meeting_date'],
             owner_id=user.id,
+            group_type=validated_data['group_type']
         )
         meeting.save()
 
@@ -195,7 +198,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ('id', 'title', 'meeting_date' , 'description',
+        fields = ('id', 'title', 'meeting_date', 'description', 'group_type',
                   'owner', 'coordinates', 'subway', 'href', 'confirms')
 
 
@@ -217,3 +220,4 @@ class ConfirmExtendedSerializer(ConfirmSerializer):
     class Meta:
         model = Confirm
         fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected', 'meeting')
+
