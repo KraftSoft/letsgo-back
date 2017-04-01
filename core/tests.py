@@ -197,10 +197,6 @@ class MeetingTests(MeetingMixin, TestCase):
             else:
                 self.assertEqual(response.status_code, 200)
                 self.assertEqual(status_code, 429)
-        tomorrow = (timezone.now() + timezone.timedelta(days=1)).isoformat()
-        response = self.create_meeting(100, 100, "title" + str(100), client1, None, tomorrow)
-        c = list(Meeting.objects.all())
-        self.assertEqual(response.status_code, 201)
 
     def test_meeting_get_baddata(self):
         test_url = reverse('meetings-list') + "?lng={lng}&lat={lat}&r={r}"

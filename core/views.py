@@ -59,13 +59,7 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
     def post(self, request, *args, **kwargs):
         user = request.user
         json = request.data
-        date_create = json.get('meeting_date', None)
-        if(date_create is None):
-            date_create = datetime.today()
-        else:
-            date_create = timezone.datetime.strptime(date_create
-                                                     , "%Y-%m-%dT%H:%M:%S.%fZ")
-            kek = 1
+        date_create = datetime.today()
         count_meetings = Meeting.objects.filter(owner=user, date_create__date=date_create)\
             .count()
         if count_meetings >= MAX_MEETINGS:
