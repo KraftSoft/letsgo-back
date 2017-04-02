@@ -1,12 +1,11 @@
 from django.conf.urls import url
 
-from core.views import UserList, UserDetail, MeetingsList, MeetingDetail, UserCreate, AuthView, FileUploadView, SetAvatar, \
+from core.views import UserList, UserDetail, MeetingsList, MeetingDetail, AuthView, FileUploadView, SetAvatar, \
     ConfirmCreate, ConfirmsList, AcceptConfirm, DeletePhoto
 
 urlpatterns = [
 
     url(r'^api-token-auth/', AuthView.as_view(), name='auth'),
-    url(r'^user-create/$', UserCreate.as_view(), name='user-create'),
     url(r'^users-list/$', UserList.as_view(), name='users-list'),
 
     url(r'^user-detail/$', UserDetail.as_view(), name='user-detail'),

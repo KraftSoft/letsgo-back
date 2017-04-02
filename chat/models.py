@@ -11,6 +11,7 @@ class Confirm(models.Model):
 
     is_approved = models.BooleanField(default=False)
     is_rejected = models.BooleanField(default=False)
+    is_read = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('meeting', 'user')

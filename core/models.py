@@ -9,6 +9,9 @@ from django.contrib.gis.db import models as gis_models
 class User(AbstractUser):
     about = models.CharField(max_length=256, blank=True)
 
+    USERNAME_FIELD = 'first_name'
+    REQUIRED_FIELDS = tuple()
+
     def get_avatar(self):
 
         obj = self.photos.filter(is_avatar=True).first()
@@ -31,9 +34,7 @@ class Meeting(models.Model):
     date_create = models.DateTimeField(auto_now=True)
     meeting_date = models.DateTimeField()
     last_modify = models.DateTimeField(auto_now_add=True)
-
-    GROUP_CHOISES = ((('two', 'Pair'), ('mul', 'Group')))
-    group_type = models.SmallIntegerField(choices=GROUP_CHOISES)
+    group_type = models.SmallIntegerField()
 
 
 class UserPhotos(models.Model):
@@ -43,3 +44,13 @@ class UserPhotos(models.Model):
 
     class Meta:
         ordering = ['-is_avatar']
+
+
+class SocialData(models.Model):
+    user = models.OneToOneField(User)
+    social_slug = models.CharField(max_length=16)
+    external_id = models.PositiveIntegerField()
+    token = models.CharField(max_length=255, unique=True)
+
+    class Meta:
+        unique_together = ('social_slug', 'external_id')

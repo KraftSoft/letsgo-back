@@ -1,18 +1,18 @@
 import os
-from unittest.mock import patch
 from PIL import Image
 from django.core.urlresolvers import reverse
 from django.test import TestCase, TransactionTestCase
 from django.test import Client
 from django.utils import timezone
+from django.utils.timezone import datetime
+
 
 from chat.models import Confirm
-from core.models import User, Meeting
+from core.models import User, Meeting, SocialData
 from rest_framework.authtoken.models import Token
 from django.contrib.gis.geos import Point
 import json
 import copy
-from core.views import FileUploadView
 from core.constants import MAX_MEETINGS
 from core.models import UserPhotos
 
@@ -45,7 +45,7 @@ def client_creation(username, password):
     test_user.save()
     token, _ = Token.objects.get_or_create(user=test_user)
     token_key = token.key
-    token = 'Token {}'.format(token_key)
+    token = 'Token {0}'.format(token_key)
     client = Client(HTTP_AUTHORIZATION=token)
     return client
 
@@ -75,21 +75,23 @@ class MeetingMixin(AuthUserMixin):
 
         point = Point(55.751244, 37.618423)  # Moscow
 
-        self.test_meeting_1 = Meeting.objects.create(title=MEETING_TITLE_1,
-                                                     description=MEETING_DESC_1,
-                                                     owner=self.test_user,
-                                                     coordinates=point,
-                                                     meeting_date=timezone.now(),
-                                                     group_type=GROUP_MEETING
-                                                     )
+        self.test_meeting_1 = Meeting.objects.create(
+            title=MEETING_TITLE_1,
+            description=MEETING_DESC_1,
+            owner=self.test_user,
+            coordinates=point,
+            meeting_date=timezone.now(),
+            group_type=GROUP_MEETING
+        )
 
-        self.test_meeting_2 = Meeting.objects.create(title=MEETING_TITLE_2,
-                                                     description=MEETING_DESC_2,
-                                                     owner=self.test_user,
-                                                     coordinates=point,
-                                                     meeting_date=timezone.now(),
-                                                     group_type=GROUP_MEETING
-                                                     )
+        self.test_meeting_2 = Meeting.objects.create(
+            title=MEETING_TITLE_2,
+            description=MEETING_DESC_2,
+            owner=self.test_user,
+            coordinates=point,
+            meeting_date=timezone.now(),
+            group_type=GROUP_MEETING
+        )
 
 
 class ConfirmMixin(MeetingMixin):
@@ -99,20 +101,59 @@ class ConfirmMixin(MeetingMixin):
         self.test_confirm = Confirm.objects.create(meeting=self.test_meeting_1, user=self.test_user)
 
 
+class CreateUserTests(TestCase):
+
+    def test_first_login(self):
+        response = self.client.post(
+            reverse('auth'),
+            data={
+                'first_name': 'Ilia',
+                'social_slug': 'vk',
+                'external_id': 228,
+                'token': 'like a token'
+            }
+        )
+
+        check_json(response.data, ('token', 'href'))
+
+    def test_second_login(self):
+
+        first_name = 'Alla'
+        ext_id = 11211
+        test_token = 'test token'
+
+        user = User.objects.create(first_name=first_name)
+        user.save()
+
+        social = SocialData.objects.create(
+            user=user,
+            social_slug='vk',
+            external_id=ext_id,
+            token=test_token
+        )
+
+        social.save()
+
+        token, _ = Token.objects.get_or_create(user=user)
+
+        response = self.client.post(
+            reverse('auth'),
+            data={
+                'first_name': first_name,
+                'social_slug': 'vk',
+                'external_id': ext_id,
+                'token': test_token
+            }
+        )
+
+        check_json(response.data, ('token', 'href'))
+
+        self.assertEqual(response.data['token'], user.auth_token.key)
+
+
 class UserTests(AuthUserMixin, TestCase):
     def setUp(self):
         super().setUp()
-
-    def test_auth_user(self):
-        response = self.client.post(reverse('auth'), {'username': TEST_USER_1, 'password': TEST_USER_PW_1})
-        fields = ('token',)
-        check_json(response.data, fields)
-        self.assertEqual(response.data['token'], self.token_key)
-
-    def test_create_user(self):
-        response = self.client.post(reverse('user-create'), {'username': TEST_USER_2, 'password': TEST_USER_PW_2})
-        fields = ('id', 'username')
-        check_json(response.data, fields)
 
     def test_get_user(self):
         response = self.client.get(reverse('user-detail', kwargs={'pk': self.test_user.pk}))
@@ -124,15 +165,23 @@ class MeetingTests(MeetingMixin, TestCase):
     def setUp(self):
         super().setUp()
 
-    def create_meeting(self, lat, lng, title, creator=None, group_type=0):
+    def create_meeting(self, lat, lng, title, creator=None,
+                       date=None, date_create=None, group_type=0):
         desc = title + "desk"
         coords = {
             'lat': lat,
             'lng': lng
         }
-        date = timezone.now().isoformat()
-        request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords,
-                                   'meeting_date': date, 'group_type': group_type})
+        request_data = None
+        if date is None:
+            date = timezone.now().isoformat()
+        if date_create is None:
+            request_data = json.dumps({'title': title, 'description': desc, 'group_type': group_type,
+                                       'coordinates': coords, 'meeting_date': date})
+        else:
+            request_data = json.dumps({'title': title, 'description': desc, 'date_create': date_create,
+                                       'group_type': group_type, 'coordinates': coords, 'meeting_date': date})
+
         if (creator is not None):
             response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
             return response
@@ -142,9 +191,7 @@ class MeetingTests(MeetingMixin, TestCase):
 
     def test_list_meetings(self):
         response = self.client.get(reverse('meetings-list'), )
-
         self.assertTrue(isinstance(response.data, list), msg='Data: {}'.format(response.data))
-
         fields = ('id', 'title', 'description', 'owner')
         check_json(response.data[0], fields)
 
@@ -323,6 +370,7 @@ class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
             reverse('confirm-action', kwargs={'pk': self.test_confirm.pk}),
             json.dumps({
                 'is_approved': True,
+                'is_read': True
             }),
             content_type='application/json',
         )
@@ -334,6 +382,7 @@ class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
         confirm = Confirm.objects.get(pk=self.test_confirm.pk)
 
         self.assertTrue(confirm.is_approved)
+        self.assertTrue(confirm.is_read)
 
     def test_reject__success(self):
         self.assertFalse(self.test_confirm.is_rejected)
@@ -353,15 +402,19 @@ class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
         confirm = Confirm.objects.get(pk=self.test_confirm.pk)
 
         self.assertTrue(confirm.is_rejected)
+        self.assertFalse(confirm.is_read)
 
 
 class UploadDeletePhotoTest(AuthUserMixin, TestCase):
     def create_photo(self, file_name):
         image = Image.new('RGBA', size=(50, 50), color=(150, 150, 0))
         image.save(file_name)
-        with patch.object(FileUploadView, 'check_mime_type', return_value=None):
-            response = self.client.put(reverse('upload-photo', kwargs={'filename': file_name}), data=image,
-                                       content_type='image/jpeg')
+
+        response = self.client.put(
+            reverse('upload-photo', kwargs={'filename': file_name}),
+            data=image,
+            content_type='image/jpeg'
+        )
         return response
 
     def test_upload__ok(self):
@@ -373,7 +426,7 @@ class UploadDeletePhotoTest(AuthUserMixin, TestCase):
 
     def test_delete(self):
         file_name = 'kek.jpeg'
-        response_cr = self.create_photo(file_name)
+        self.create_photo(file_name)
         photos = list(UserPhotos.objects.all())
         kek_id = photos[0].id
         response = self.client.delete(reverse('delete-photo', kwargs={'pk': kek_id}))
