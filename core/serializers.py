@@ -145,6 +145,7 @@ class LocationSerializer(serializers.Field):
             'lng': instance.coords[1],
         }
 
+
 class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('is_approved', 'is_rejected')
@@ -154,6 +155,7 @@ class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
     class Meta:
         model = Confirm
         fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected')
+
 
 class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
@@ -195,7 +197,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ('id', 'title', 'meeting_date' , 'description',
+        fields = ('id', 'title', 'meeting_date', 'description',
                   'owner', 'coordinates', 'subway', 'href', 'confirms')
 
 

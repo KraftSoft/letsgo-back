@@ -25,8 +25,8 @@ class MeetingMixin(object):
         if (self.lat is None or self.lng is None or self.r is None):
             return Meeting.objects.all()
         radius = self.r * 1000
-        query = "select *  from core_meeting where ST_Distance_Sphere(coordinates, ST_MakePoint({lat},{lng})) <=  {r};".format(
-            lat=self.lat, lng=self.lng, r=radius)
+        query = "select *  from core_meeting where ST_Distance_Sphere(coordinates, " \
+                "ST_MakePoint({lat},{lng})) <=  {r};".format(lat=self.lat, lng=self.lng, r=radius)
         return Meeting.objects.raw(query)
 
 

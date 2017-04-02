@@ -13,3 +13,4 @@ requests==2.11.0
 six==1.10.0
 python-magic==0.4.12
 mock==2.0.0
+python-dateutil=2.6.0

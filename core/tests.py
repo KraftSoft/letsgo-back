@@ -5,6 +5,8 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase, TransactionTestCase
 from django.test import Client
 from django.utils import timezone
+from django.utils.timezone import datetime
+
 
 from chat.models import Confirm
 from core.models import User, Meeting
@@ -119,15 +121,22 @@ class MeetingTests(MeetingMixin, TestCase):
     def setUp(self):
         super().setUp()
 
-    def create_meeting(self, lat, lng, title, creator=None):
+    def create_meeting(self, lat, lng, title, creator=None, date=None, date_create=None):
         desc = title + "desk"
         coords = {
             'lat': lat,
             'lng': lng
         }
-        date = timezone.now().isoformat()
-        request_data = json.dumps({'title': title, 'description': desc, 'coordinates': coords,
-                                   'meeting_date': date})
+        request_data = None
+        if date is None:
+            date = timezone.now().isoformat()
+        if date_create is None:
+            request_data = json.dumps({'title': title, 'description': desc,
+                                       'coordinates': coords, 'meeting_date': date})
+        else:
+            request_data = json.dumps({'title': title, 'description': desc, 'date_create': date_create,
+                                       'coordinates': coords, 'meeting_date': date})
+
         if (creator is not None):
             response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
             return response
@@ -137,9 +146,7 @@ class MeetingTests(MeetingMixin, TestCase):
 
     def test_list_meetings(self):
         response = self.client.get(reverse('meetings-list'), )
-
         self.assertTrue(isinstance(response.data, list), msg='Data: {}'.format(response.data))
-
         fields = ('id', 'title', 'description', 'owner')
         check_json(response.data[0], fields)
 
@@ -160,18 +167,14 @@ class MeetingTests(MeetingMixin, TestCase):
         fields = ('id', 'title', 'description', 'owner', 'subway', 'coordinates', 'meeting_date')
         data = response.data
         check_json(data, fields)
-        kek = 1
 
     def test_meeting_get_inradius(self):
         client1 = client_creation("vasyan", "qwerty")
         client2 = client_creation("petyan", "qwerty")
-        check = list(Meeting.objects.all())
-
         for i in range(0, 3):
             response = self.create_meeting(i, i, "title" + str(i), client1)
         for i in range(3, 6):
             response = self.create_meeting(i, i, "title" + str(i), client2)
-        check = list(Meeting.objects.all())
         test_url = reverse('meetings-list') + "?lng={lng}&lat={lat}&r={r}"
         response = self.client.get(test_url.format(lng=2, lat=2, r=1))
         data = response.data
@@ -256,7 +259,7 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
                 'title': self.NEW_MEET_TITLE,
                 'description': self.NEW_MEET_DESC,
                 'coordinates': self.coords,
-                'meeting_date':MEETING_DATE_1.strftime("%Y-%m-%d %H:%M:%S")
+                'meeting_date': MEETING_DATE_1.strftime("%Y-%m-%d %H:%M:%S")
             }),
             content_type='application/json'
         )

@@ -4,6 +4,9 @@ import re
 import magic
 from django.core.files.storage import default_storage
 from django.db import DatabaseError
+from django.utils import timezone
+from django.utils.timezone import datetime
+
 from rest_framework import generics
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
@@ -55,11 +58,14 @@ class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestr
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         user = request.user
-        count_meetings = Meeting.objects.filter(owner=user).count()
+        json = request.data
+        date_create = datetime.today()
+        count_meetings = Meeting.objects.filter(owner=user, date_create__date=date_create)\
+            .count()
         if count_meetings >= MAX_MEETINGS:
             logger.warning(
-                'USER user_id={0} trying to create more than MAX_MEETINGS '
-                'meetings'.format(self.request.user.id))
+                'USER user_id={0} trying to create more than MAX_MEETINGS per day {1}'
+                'meetings'.format(self.request.user.id, date_create))
             return Response(
                 JRS(JsonResponse(status=429, msg="user's trying to create more than "
                                                  "MAX_MEETINGS meetings")).data)
@@ -67,7 +73,6 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
 
     def get(self, request, *args, **kwargs):
         try:
-            self.user_id = request._user.id
             self.lat = float(request.GET.get('lat'))
             self.lng = float(request.GET.get('lng'))
             self.r = float(request.GET.get('r'))
