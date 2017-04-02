@@ -1,7 +1,8 @@
 from chat.models import Confirm
-from core.models import User, Meeting, UserPhotos
+from core.models import User, Meeting, UserPhotos, SocialData
 from core.permissions import IsStaffOrMe, IsStaffOrOwner
-from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSerializer, ConfirmSerializer
+from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSerializer, ConfirmSerializer, \
+    SocialSerializer
 
 
 class UserMixin(object):
@@ -22,7 +23,7 @@ class MeetingMixin(object):
     r = None
 
     def get_queryset(self):
-        if (self.lat is None or self.lng is None or self.r is None):
+        if self.lat is None or self.lng is None or self.r is None:
             return Meeting.objects.all()
         radius = self.r * 1000
         query = "select *  from core_meeting where ST_Distance_Sphere(coordinates, " \
@@ -45,3 +46,8 @@ class ConfirmMixin(object):
     serializer_class = ConfirmSerializer
     who_can_update = IsStaffOrOwner
     owner_path = 'meeting.owner'
+
+
+class SocialMixin(object):
+    model = SocialData
+    serializer_class = SocialSerializer

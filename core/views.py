@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.utils.timezone import datetime
 
 from rest_framework import generics
+from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
 from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView, DestroyAPIView
@@ -25,10 +26,10 @@ from core.constants import MOSCKOW_R
 
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin
-from core.models import Meeting, UserPhotos
+from core.models import Meeting, UserPhotos, SocialData, User
 from core.permissions import GeneralPermissionMixin
-from core.serializers import JsonResponseSerializer as JRS
-from core.utils import JsonResponse
+from core.serializers import JsonResponseSerializer as JRS, AuthSerializer
+from core.utils import JsonResponse, build_absolute_url
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +42,6 @@ def api_root(request, format=None):
     return Response({
         'users': reverse('user-list', request=request),
     })
-
-
-class UserCreate(UserMixin, generics.CreateAPIView):
-    pass
 
 
 class UserList(UserMixin, generics.ListCreateAPIView):
@@ -88,7 +85,19 @@ class MeetingDetail(GeneralPermissionMixin, MeetingMixin, generics.RetrieveUpdat
 
 
 class AuthView(ObtainAuthToken):
-    pass
+    serializer_class = AuthSerializer
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+
+        return Response({
+            'token': token.key,
+            'href': build_absolute_url(reverse('user-detail', kwargs={'pk': user.pk}))
+        })
 
 
 class FileUploadView(APIView):
@@ -135,7 +144,7 @@ class FileUploadView(APIView):
 
             file_obj = request.data['file']
 
-            self.check_mime_type(file_obj)
+            #self.check_mime_type(file_obj)
 
             self.save_file(filename, file_obj)
 

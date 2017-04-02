@@ -10,7 +10,7 @@ from django.core.urlresolvers import reverse
 
 
 from chat.models import Confirm
-from core.models import User, Meeting, UserPhotos
+from core.models import User, Meeting, UserPhotos, SocialData
 from core.utils import reverse_full, build_absolute_url
 
 
@@ -158,6 +158,7 @@ class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
 
 
+
 class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('title', 'description', 'coordinates', 'meeting_date')
@@ -220,3 +221,53 @@ class ConfirmExtendedSerializer(ConfirmSerializer):
     class Meta:
         model = Confirm
         fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected', 'meeting')
+
+
+class SocialSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SocialData
+        fields = ('social_slug', 'external_id', 'token')
+
+
+class AuthSerializer(serializers.Serializer):
+
+    social_slug = serializers.CharField(max_length=16)
+    external_id = serializers.IntegerField()
+    token = serializers.CharField(max_length=255)
+    first_name = serializers.CharField(max_length=32)
+
+    def validate(self, attrs):
+
+        social_slug = attrs.get('social_slug')
+        external_id = attrs.get('external_id')
+        token = attrs.get('token')
+        first_name = attrs.get('first_name')
+
+        if social_slug and external_id and token and first_name:
+            existing_social_data = SocialData.objects.filter(
+                social_slug=social_slug,
+                external_id=external_id,
+                token=token
+            ).last()
+
+            if existing_social_data:
+                attrs['user'] = existing_social_data.user
+                return attrs
+
+            user = User.objects.create(first_name=first_name)
+            user.save()
+
+            social = SocialData.objects.create(
+                user=user,
+                social_slug=social_slug,
+                external_id=external_id,
+                token=token
+            )
+
+            social.save()
+
+            attrs['user'] = user
+            return attrs
+        else:
+            msg = _('Must include "social_slug", "external_id" and "token".')
+            raise serializers.ValidationError(msg, code='authorization')
