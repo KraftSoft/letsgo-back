@@ -148,13 +148,14 @@ class LocationSerializer(serializers.Field):
 
 class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
-    UPDATE_AVAILABLE_FIELDS = ('is_approved', 'is_rejected')
+    UPDATE_AVAILABLE_FIELDS = ('is_approved', 'is_rejected', 'is_read')
 
     user = UserSerializer(read_only=True)
 
     class Meta:
         model = Confirm
-        fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected')
+        fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected', 'is_read')
+
 
 
 class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):

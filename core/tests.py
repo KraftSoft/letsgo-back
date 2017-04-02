@@ -323,6 +323,7 @@ class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
             reverse('confirm-action', kwargs={'pk': self.test_confirm.pk}),
             json.dumps({
                 'is_approved': True,
+                'is_read': True
             }),
             content_type='application/json',
         )
@@ -334,6 +335,7 @@ class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
         confirm = Confirm.objects.get(pk=self.test_confirm.pk)
 
         self.assertTrue(confirm.is_approved)
+        self.assertTrue(confirm.is_read)
 
     def test_reject__success(self):
         self.assertFalse(self.test_confirm.is_rejected)
@@ -353,6 +355,7 @@ class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
         confirm = Confirm.objects.get(pk=self.test_confirm.pk)
 
         self.assertTrue(confirm.is_rejected)
+        self.assertFalse(confirm.is_read)
 
 
 class UploadDeletePhotoTest(AuthUserMixin, TestCase):
