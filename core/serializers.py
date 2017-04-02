@@ -145,6 +145,7 @@ class LocationSerializer(serializers.Field):
             'lng': instance.coords[1],
         }
 
+
 class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('is_approved', 'is_rejected')
@@ -154,6 +155,7 @@ class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
     class Meta:
         model = Confirm
         fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected')
+
 
 class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
@@ -169,8 +171,15 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     meeting_date = serializers.DateTimeField(required=True)
 
+    color_status = serializers.SerializerMethodField()
+
     def get_href(self, obj):
         return reverse_full('meeting-detail', kwargs={'pk': obj.id})
+
+    def get_color_status(self, obj):
+        request = self.context['request']
+        if(obj.owner.id == request.user.id):
+            return 'mine'
 
     def serialize_coordinates(self, instance):
         return {
@@ -179,9 +188,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-
         user = self.context['view'].request.user
-
         meeting = Meeting.objects.create(
             title=validated_data['title'],
             description=validated_data['description'],
@@ -195,7 +202,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ('id', 'title', 'meeting_date' , 'description',
+        fields = ('id', 'title', 'meeting_date', 'description', 'color_status',
                   'owner', 'coordinates', 'subway', 'href', 'confirms')
 
 
