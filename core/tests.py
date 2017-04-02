@@ -52,7 +52,8 @@ def client_creation(username, password):
 
 def check_json(data, fields):
     for field in fields:
-        assert field in data, 'Field "{0}" is not returned in response\nResponse data: {1}'.format(field, data)
+        assert field in data, 'Field "{0}" is not returned in response\n' \
+                              'Response data: {1}'.format(field, data)
 
 
 class AuthUserMixin(object):
@@ -359,13 +360,27 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
         self.assertEqual(response.status_code, 401)
 
 
-class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
+class ConfirmCases(ConfirmMixin, MeetingTests, TransactionTestCase):
     def setUp(self):
         super().setUp()
 
+    def test_list_confirms(self):
+        meeting_creator = client_creation('creator', 'lol')
+        meeting_resp = self.create_meeting(1, 1, 'keklol', meeting_creator)
+        fst_successor = client_creation('fst_successor', 'lol')
+        snd_successor = client_creation('snd_successor', 'lol')
+        meeting_id = meeting_resp.data['id']
+        fst_confirm_r = fst_successor.post(reverse('meeting-confirm', kwargs={'pk': meeting_id}))
+        snd_confirm_r = snd_successor.post(reverse('meeting-confirm', kwargs={'pk': meeting_id}))
+        creator_confirmations_r = meeting_creator.get(reverse('confirms-list'))
+        fields = ('id', 'title', 'description', 'owner', 'subway', 'group_type')
+        fst_meeting = creator_confirmations_r.data[0]['meeting']
+        snd_meeting = creator_confirmations_r.data[1]['meeting']
+        check_json(fst_meeting, fields)
+        check_json(snd_meeting, fields)
+
     def test_approve__success(self):
         self.assertFalse(self.test_confirm.is_approved)
-
         response = self.client.put(
             reverse('confirm-action', kwargs={'pk': self.test_confirm.pk}),
             json.dumps({
@@ -374,13 +389,9 @@ class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
             }),
             content_type='application/json',
         )
-
         code = response.status_code
-
         self.assertEqual(code, 200)
-
         confirm = Confirm.objects.get(pk=self.test_confirm.pk)
-
         self.assertTrue(confirm.is_approved)
         self.assertTrue(confirm.is_read)
 
