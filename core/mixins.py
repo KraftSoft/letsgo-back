@@ -5,6 +5,7 @@ from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSer
     ConfirmSerializer, ConfirmExtendedSerializer, SocialSerializer
 
 
+
 class UserMixin(object):
     model = User
     serializer_class = UserSerializerExtended
@@ -46,7 +47,6 @@ class ConfirmMixin(object):
     serializer_class = ConfirmExtendedSerializer
     who_can_update = IsStaffOrOwner
     owner_path = 'meeting.owner'
-
 
 class ConfirmBasicMixin(ConfirmMixin):
     serializer_class = ConfirmSerializer

@@ -136,16 +136,11 @@ class FileUploadView(APIView):
                                                                                         e))
 
     def put(self, request, filename, format=None):
-
         self.request = request
-
         try:
             self.validate_request()
-
             file_obj = request.data['file']
-
             self.save_file(filename, file_obj)
-
         except UploadException as e:
             return Response(JRS(e.response).data)
 
