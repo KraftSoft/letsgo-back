@@ -28,7 +28,7 @@ TEMPLATE_DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-BASE_DOMAIN = '185.76.147.143'
+BASE_DOMAIN = '37.46.128.134'
 BASE_SCHEMA = 'http'
 
 AUTH_USER_MODEL = 'core.user'
@@ -128,7 +128,7 @@ LOGGING = {
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Moscow'
 
 USE_I18N = True
 
@@ -151,4 +151,5 @@ STATICFILES_DIRS = [
 
 TEMPLATE_DIRS = (
     BASE_DIR + '/../tpl/',
+    BASE_DIR + '/../deploy_tools/tpl/'
 )

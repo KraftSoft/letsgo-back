@@ -5,7 +5,11 @@ import re
 import magic
 from django.core.files.storage import default_storage
 from django.db import DatabaseError
+from django.utils import timezone
+from django.utils.timezone import datetime
+
 from rest_framework import generics
+from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
 from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView, DestroyAPIView
@@ -23,10 +27,10 @@ from core.constants import MOSCKOW_R
 
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin
-from core.models import Meeting, UserPhotos
+from core.models import Meeting, UserPhotos, SocialData, User
 from core.permissions import GeneralPermissionMixin
-from core.serializers import JsonResponseSerializer as JRS
-from core.utils import JsonResponse
+from core.serializers import JsonResponseSerializer as JRS, AuthSerializer
+from core.utils import JsonResponse, build_absolute_url
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +45,6 @@ def api_root(request, format=None):
     })
 
 
-class UserCreate(UserMixin, generics.CreateAPIView):
-    pass
-
-
 class UserList(UserMixin, generics.ListCreateAPIView):
     pass
 
@@ -56,17 +56,21 @@ class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestr
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         user = request.user
-        count_meetings = Meeting.objects.filter(owner=user).count()
+        json = request.data
+        date_create = datetime.today()
+        count_meetings = Meeting.objects.filter(owner=user, date_create__date=date_create)\
+            .count()
         if count_meetings >= MAX_MEETINGS:
             logger.warning(
-                'USER user_id={0} trying to create more than MAX_MEETINGS meetings'.format(self.request.user.id))
+                'USER user_id={0} trying to create more than MAX_MEETINGS per day {1}'
+                'meetings'.format(self.request.user.id, date_create))
             return Response(
-                JRS(JsonResponse(status=429, msg="user's trying to create more than MAX_MEETINGS meetings")).data)
+                JRS(JsonResponse(status=429, msg="user's trying to create more than "
+                                                 "MAX_MEETINGS meetings")).data)
         return super().post(request, *args, **kwargs)
 
     def get(self, request, *args, **kwargs):
         try:
-            self.user_id = request._user.id
             self.lat = float(request.GET.get('lat'))
             self.lng = float(request.GET.get('lng'))
             self.r = float(request.GET.get('r'))
@@ -82,7 +86,19 @@ class MeetingDetail(GeneralPermissionMixin, MeetingMixin, generics.RetrieveUpdat
 
 
 class AuthView(ObtainAuthToken):
-    pass
+    serializer_class = AuthSerializer
+
+    def post(self, request, *args, **kwargs):
+
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+
+        return Response({
+            'token': token.key,
+            'href': build_absolute_url(reverse('user-detail', kwargs={'pk': user.pk}))
+        })
 
 
 class FileUploadView(APIView):
@@ -129,7 +145,7 @@ class FileUploadView(APIView):
 
             file_obj = request.data['file']
 
-            self.check_mime_type(file_obj)
+            #self.check_mime_type(file_obj)
 
             self.save_file(filename, file_obj)
 
