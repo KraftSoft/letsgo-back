@@ -156,11 +156,6 @@ class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
         model = Confirm
         fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected', 'is_read')
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 2b41d3b34245a7506596dcc760eeea2381378353
 
 class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
@@ -203,11 +198,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-<<<<<<< HEAD
         fields = ('id', 'title', 'meeting_date', 'description', 'group_type',
-=======
-        fields = ('id', 'title', 'meeting_date', 'description',
->>>>>>> 2b41d3b34245a7506596dcc760eeea2381378353
                   'owner', 'coordinates', 'subway', 'href', 'confirms')
 
 
