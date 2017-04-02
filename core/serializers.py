@@ -184,7 +184,6 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['view'].request.user
-
         meeting = Meeting.objects.create(
             title=validated_data['title'],
             description=validated_data['description'],
