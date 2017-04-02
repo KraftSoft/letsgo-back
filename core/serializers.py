@@ -157,8 +157,6 @@ class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
         fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected', 'is_read')
 
 
-
-
 class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('title', 'description', 'coordinates', 'meeting_date')

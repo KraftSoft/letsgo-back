@@ -17,7 +17,7 @@ class User(AbstractUser):
         obj = self.photos.filter(is_avatar=True).first()
 
         if not obj:
-            return ''
+            obj = self.photos.filter().first()
 
         if not obj.photo:
             return ''
