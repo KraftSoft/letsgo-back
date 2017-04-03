@@ -1,6 +1,7 @@
 from django.core.management import BaseCommand
 from django.template.loader import render_to_string
-
+import subprocess
+import shlex
 from application.settings.base import BASE_DIR
 
 
@@ -11,7 +12,7 @@ class Command(BaseCommand):
 
         context = {
             'project_name': 'letsgo',
-            'project_version': '1.0-2'
+            'project_version': '1.0-4'
         }
 
         postinst_tpl = 'debian/postinst.tpl'
@@ -28,3 +29,7 @@ class Command(BaseCommand):
             f.write(content)
 
         self.stdout.write('Rendering successfully completed')
+
+        subprocess.call(
+            shlex.split('deploy_tools/build.sh {0} {1}'.format(context['project_name'], context['project_version']))
+        )

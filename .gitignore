@@ -21,6 +21,7 @@ sdist/
 #i fucking hate git
 #i wasn't able to make this commit without this retarded shit
 uploads/
+static/test/
 var/
 *.egg-info/
 .installed.cfg
@@ -98,5 +99,6 @@ ENV/
 secret.py
 conf/
 .*
+*.dump
 
 

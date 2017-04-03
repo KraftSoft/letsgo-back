@@ -12,6 +12,7 @@ from django.core.urlresolvers import reverse
 from chat.models import Confirm
 from core.models import User, Meeting, UserPhotos, SocialData
 from core.utils import reverse_full, build_absolute_url
+import hashlib
 
 
 class SmartUpdaterMixin(object):
@@ -157,8 +158,6 @@ class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
         fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected', 'is_read')
 
 
-
-
 class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('title', 'description', 'coordinates', 'meeting_date')
@@ -254,7 +253,8 @@ class AuthSerializer(serializers.Serializer):
                 attrs['user'] = existing_social_data.user
                 return attrs
 
-            user = User.objects.create(first_name=first_name)
+            username = hashlib.sha224('{0}{1}'.format(token, social_slug).encode('utf-8')).hexdigest()[:20]
+            user = User.objects.create(first_name=first_name, username=username)
             user.save()
 
             social = SocialData.objects.create(
@@ -269,5 +269,5 @@ class AuthSerializer(serializers.Serializer):
             attrs['user'] = user
             return attrs
         else:
-            msg = _('Must include "social_slug", "external_id" and "token".')
+            msg = 'Must include "social_slug", "external_id" and "token".'
             raise serializers.ValidationError(msg, code='authorization')
