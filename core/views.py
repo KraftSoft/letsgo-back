@@ -6,6 +6,7 @@ from django.core.files.storage import default_storage
 from django.db import DatabaseError
 from django.utils import timezone
 from django.utils.timezone import datetime
+import json
 
 from rest_framework import generics
 from rest_framework.authtoken.models import Token
@@ -23,6 +24,7 @@ from core.constants import MAX_MEETINGS
 from core.constants import MOSCOW_LAT
 from core.constants import MOSCOW_LNG
 from core.constants import MOSCKOW_R
+from core.constants import MEETING_CATEGORIES
 
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin, ConfirmBasicMixin
@@ -239,3 +241,12 @@ class ConfirmsList(GeneralPermissionMixin, ConfirmMixin, ListAPIView):
 
 class AcceptConfirm(GeneralPermissionMixin, ConfirmBasicMixin, UpdateAPIView):
     pass
+
+
+class MeetingTypes(GeneralPermissionMixin, ListAPIView):
+    def get(self, request, *args, **kwargs):
+        answer = {}
+        for k, v in MEETING_CATEGORIES.items():
+            answer[k] = v[0]
+        json_data = json.dumps(answer)
+        return Response(JRS(JsonResponse(status=200, msg=json_data)).data)

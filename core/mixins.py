@@ -5,7 +5,6 @@ from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSer
     ConfirmSerializer, ConfirmExtendedSerializer, SocialSerializer
 
 
-
 class UserMixin(object):
     model = User
     serializer_class = UserSerializerExtended
