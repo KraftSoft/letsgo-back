@@ -7,7 +7,7 @@ from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.settings import api_settings
 from django.core.urlresolvers import reverse
-
+from core.constants import MINE, APPROVED, DISAPPROVED
 
 from chat.models import Confirm
 from core.models import User, Meeting, UserPhotos, SocialData
@@ -171,7 +171,19 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     meeting_date = serializers.DateTimeField(required=True)
 
+    color_status = serializers.SerializerMethodField()
+
     group_type = serializers.IntegerField(required=True)
+
+    def get_color_status(self, obj):
+        request_user = self.context['request'].user
+        if(request_user.id == obj.owner.id):
+            return (MINE)
+        check_confirm = list(Confirm.objects.filter(user__id=request_user.id))
+        if len(check_confirm) == 0 or not check_confirm[0].is_approved:
+            return DISAPPROVED
+        else:
+            return APPROVED
 
     def get_href(self, obj):
         return reverse_full('meeting-detail', kwargs={'pk': obj.id})
@@ -199,7 +211,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
     class Meta:
         model = Meeting
         fields = ('id', 'title', 'meeting_date', 'description', 'group_type',
-                  'owner', 'coordinates', 'subway', 'href', 'confirms')
+                  'owner', 'coordinates', 'subway', 'href', 'confirms', 'color_status')
 
 
 class JsonResponseSerializer(serializers.Serializer):

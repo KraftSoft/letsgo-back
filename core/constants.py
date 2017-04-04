@@ -4,6 +4,11 @@ MOSCOW_LAT = 55.751244
 MOSCOW_LNG = 37.618423
 MOSCKOW_R = 30
 
+MINE = 'mine'
+APPROVED = 'approved'
+DISAPPROVED = 'disapproved'
+
+
 MEETING_CATEGORIES = {
     "general": (0, u'общее'),
     "sport": (1, u'спорт'),

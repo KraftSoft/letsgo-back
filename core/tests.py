@@ -13,7 +13,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.gis.geos import Point
 import json
 import copy
-from core.constants import MAX_MEETINGS
+from core.constants import MAX_MEETINGS, MINE, APPROVED, DISAPPROVED
 from core.models import UserPhotos
 
 timezone.now()
@@ -378,6 +378,9 @@ class ConfirmCases(ConfirmMixin, MeetingTests, TransactionTestCase):
         snd_meeting = creator_confirmations_r.data[1]['meeting']
         check_json(fst_meeting, fields)
         check_json(snd_meeting, fields)
+        self.assertEqual(fst_meeting['color_status'], MINE)
+        self.assertEqual(snd_meeting['color_status'], MINE)
+
 
     def test_approve__success(self):
         self.assertFalse(self.test_confirm.is_approved)
