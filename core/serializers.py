@@ -157,8 +157,6 @@ class ConfirmSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
         fields = ('id', 'user', 'date_create', 'is_approved', 'is_rejected', 'is_read')
 
 
-
-
 class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     UPDATE_AVAILABLE_FIELDS = ('title', 'description', 'coordinates', 'meeting_date')
@@ -173,6 +171,8 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     meeting_date = serializers.DateTimeField(required=True)
 
+    group_type = serializers.IntegerField(required=True)
+
     def get_href(self, obj):
         return reverse_full('meeting-detail', kwargs={'pk': obj.id})
 
@@ -183,15 +183,14 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-
         user = self.context['view'].request.user
-
         meeting = Meeting.objects.create(
             title=validated_data['title'],
             description=validated_data['description'],
             coordinates=validated_data['coordinates'],
             meeting_date=validated_data['meeting_date'],
             owner_id=user.id,
+            group_type=validated_data['group_type']
         )
         meeting.save()
 
@@ -199,7 +198,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ('id', 'title', 'meeting_date', 'description',
+        fields = ('id', 'title', 'meeting_date', 'description', 'group_type',
                   'owner', 'coordinates', 'subway', 'href', 'confirms')
 
 
