@@ -34,6 +34,7 @@ class Meeting(models.Model):
     date_create = models.DateTimeField(auto_now=True)
     meeting_date = models.DateTimeField()
     last_modify = models.DateTimeField(auto_now_add=True)
+    group_type = models.SmallIntegerField()
 
 
 class UserPhotos(models.Model):

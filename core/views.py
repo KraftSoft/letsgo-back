@@ -25,7 +25,7 @@ from core.constants import MOSCOW_LNG
 from core.constants import MOSCKOW_R
 
 from core.exceptions import UploadException
-from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin
+from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin, ConfirmBasicMixin
 from core.models import Meeting, UserPhotos, SocialData, User
 from core.permissions import GeneralPermissionMixin
 from core.serializers import JsonResponseSerializer as JRS, AuthSerializer
@@ -136,18 +136,11 @@ class FileUploadView(APIView):
                                                                                         e))
 
     def put(self, request, filename, format=None):
-
         self.request = request
-
         try:
             self.validate_request()
-
             file_obj = request.data['file']
-
-            #self.check_mime_type(file_obj)
-
             self.save_file(filename, file_obj)
-
         except UploadException as e:
             return Response(JRS(e.response).data)
 
@@ -244,5 +237,5 @@ class ConfirmsList(GeneralPermissionMixin, ConfirmMixin, ListAPIView):
         return super().get(request, *args, **kwargs)
 
 
-class AcceptConfirm(GeneralPermissionMixin, ConfirmMixin, UpdateAPIView):
+class AcceptConfirm(GeneralPermissionMixin, ConfirmBasicMixin, UpdateAPIView):
     pass
