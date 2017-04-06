@@ -98,7 +98,6 @@ class MeetingMixin(AuthUserMixin):
 class ConfirmMixin(MeetingMixin):
     def setUp(self):
         super().setUp()
-
         self.test_confirm = Confirm.objects.create(meeting=self.test_meeting_1, user=self.test_user)
 
 
@@ -428,6 +427,10 @@ class ConfirmCases(ConfirmMixin, MeetingTests, TransactionTestCase):
 
         self.assertTrue(confirm.is_rejected)
         self.assertFalse(confirm.is_read)
+
+    def test_try_confir_twise(self):
+        response = self.client.post(reverse('meeting-confirm',kwargs={'pk': self.test_meeting_1.id}))
+        self.assertEqual(response.data['status'], 400)
 
 
 class UploadDeletePhotoTest(AuthUserMixin, TestCase):
