@@ -1,4 +1,6 @@
+import hashlib
 import logging
+import random
 import re
 
 import magic
@@ -122,29 +124,45 @@ class FileUploadView(APIView):
 
         local_path = '{0}/{1}'.format(self.url_prefix, filename)
         self.storage.save(local_path, file_obj)
-        full_path = self.storage.url(local_path)
+        self.full_path = self.storage.url(local_path)
 
         try:
             photos_cnt = UserPhotos.objects.filter(owner=self.request.user).count()
             if photos_cnt > 0:
-                UserPhotos.objects.create(owner=self.request.user, photo=full_path)
+                UserPhotos.objects.create(owner=self.request.user, photo=self.full_path)
             else:
-                UserPhotos.objects.create(owner=self.request.user, photo=full_path, is_avatar=True)
+                UserPhotos.objects.create(owner=self.request.user, photo=self.full_path, is_avatar=True)
         except DatabaseError as e:
             logger.error(
-                'Can not save photo for user_id={0}, photo_path: {1}\nError:{2}'.format(self.request.user.id, full_path,
-                                                                                        e))
+                'Can not save photo for user_id={0}, photo_path: {1}\nError:{2}'.format(
+                    self.request.user.id,
+                    self.full_path,
+                    e
+                )
+            )
 
     def put(self, request, filename, format=None):
         self.request = request
         try:
             self.validate_request()
             file_obj = request.data['file']
+
             self.save_file(filename, file_obj)
+
         except UploadException as e:
             return Response(JRS(e.response).data)
 
-        return Response(JRS(JsonResponse(status=204, msg='ok')).data)
+        return Response(
+            JRS(
+                JsonResponse(
+                    status=204,
+                    msg='ok',
+                    data={
+                        'href': build_absolute_url(self.full_path)
+                    }
+                )
+            ).data
+        )
 
 
 class DeletePhoto(GeneralPermissionMixin, PhotoMixin, DestroyAPIView):

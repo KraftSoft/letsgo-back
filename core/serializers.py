@@ -212,6 +212,7 @@ class JsonResponseSerializer(serializers.Serializer):
 
     status = serializers.IntegerField()
     msg = serializers.CharField(max_length=512)
+    data = serializers.JSONField(required=False)
 
 
 class ConfirmExtendedSerializer(ConfirmSerializer):

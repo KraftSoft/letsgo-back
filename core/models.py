@@ -19,7 +19,7 @@ class User(AbstractUser):
         if not obj:
             obj = self.photos.filter().first()
 
-        if not obj.photo:
+        if not obj or not obj.photo:
             return ''
 
         return build_absolute_url(obj.photo)

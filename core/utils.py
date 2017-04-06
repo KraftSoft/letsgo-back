@@ -3,9 +3,10 @@ from django.core.urlresolvers import reverse
 
 
 class JsonResponse(object):
-    def __init__(self, status, msg):
+    def __init__(self, status, msg, data=None):
         self.status = status
         self.msg = msg
+        self.data = data
 
 
 def reverse_full(slug, *args, **kwargs):
