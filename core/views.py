@@ -119,7 +119,7 @@ class FileUploadView(APIView):
     def save_file(self, filename, file_obj):
 
         local_path = '{0}/{1}'.format(self.url_prefix, filename)
-        self.view_context['path'] = self.storage.save(local_path, file_obj)
+        self.view_context['path'] = '/{0}'.format(self.storage.save(local_path, file_obj))
 
         try:
             photos_cnt = UserPhotos.objects.filter(owner=self.request.user).count()

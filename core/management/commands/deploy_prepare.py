@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
         context = {
             'project_name': 'letsgo',
-            'project_version': '1.0-4'
+            'project_version': '1.0-5'
         }
 
         postinst_tpl = 'debian/postinst.tpl'
@@ -29,7 +29,3 @@ class Command(BaseCommand):
             f.write(content)
 
         self.stdout.write('Rendering successfully completed')
-
-        subprocess.call(
-            shlex.split('deploy_tools/build.sh {0} {1}'.format(context['project_name'], context['project_version']))
-        )
