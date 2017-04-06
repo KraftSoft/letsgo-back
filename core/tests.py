@@ -380,7 +380,18 @@ class ConfirmCases(ConfirmMixin, MeetingTests, TransactionTestCase):
         check_json(snd_meeting, fields)
         self.assertEqual(fst_meeting['color_status'], MINE)
         self.assertEqual(snd_meeting['color_status'], MINE)
-
+        response = meeting_creator.put(
+            reverse('confirm-action', kwargs={'pk': creator_confirmations_r.data[0]['id']}),
+            json.dumps({
+                'is_approved': True,
+                'is_read': True
+            }),
+            content_type='application/json',
+        )
+        meetings_from_fst = fst_successor.get(reverse('meetings-list'))
+        data = meetings_from_fst.data
+        if(data[0]['color_status'] == DISAPPROVED and data[1]['color_status'] == DISAPPROVED):
+            self.assertEqual(0, 1)
 
     def test_approve__success(self):
         self.assertFalse(self.test_confirm.is_approved)
