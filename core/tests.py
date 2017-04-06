@@ -35,6 +35,9 @@ MEETING_DESC_2 = 'Party for everybody :)'
 
 MEETING_DATE_1 = timezone.now()
 
+PAIR_MEETING = 0
+GROUP_MEETING = 1
+
 
 def client_creation(username, password):
     test_user = User.objects.create(username=username)
@@ -49,7 +52,8 @@ def client_creation(username, password):
 
 def check_json(data, fields):
     for field in fields:
-        assert field in data, 'Field "{0}" is not returned in response\nResponse data: {1}'.format(field, data)
+        assert field in data, 'Field "{0}" is not returned in response\n' \
+                              'Response data: {1}'.format(field, data)
 
 
 class AuthUserMixin(object):
@@ -77,7 +81,8 @@ class MeetingMixin(AuthUserMixin):
             description=MEETING_DESC_1,
             owner=self.test_user,
             coordinates=point,
-            meeting_date=timezone.now()
+            meeting_date=timezone.now(),
+            group_type=GROUP_MEETING
         )
 
         self.test_meeting_2 = Meeting.objects.create(
@@ -85,7 +90,8 @@ class MeetingMixin(AuthUserMixin):
             description=MEETING_DESC_2,
             owner=self.test_user,
             coordinates=point,
-            meeting_date=timezone.now()
+            meeting_date=timezone.now(),
+            group_type=GROUP_MEETING
         )
 
 
@@ -160,7 +166,8 @@ class MeetingTests(MeetingMixin, TestCase):
     def setUp(self):
         super().setUp()
 
-    def create_meeting(self, lat, lng, title, creator=None, date=None, date_create=None):
+    def create_meeting(self, lat, lng, title, creator=None,
+                       date=None, date_create=None, group_type=0):
         desc = title + "desk"
         coords = {
             'lat': lat,
@@ -170,11 +177,11 @@ class MeetingTests(MeetingMixin, TestCase):
         if date is None:
             date = timezone.now().isoformat()
         if date_create is None:
-            request_data = json.dumps({'title': title, 'description': desc,
+            request_data = json.dumps({'title': title, 'description': desc, 'group_type': group_type,
                                        'coordinates': coords, 'meeting_date': date})
         else:
             request_data = json.dumps({'title': title, 'description': desc, 'date_create': date_create,
-                                       'coordinates': coords, 'meeting_date': date})
+                                       'group_type': group_type, 'coordinates': coords, 'meeting_date': date})
 
         if (creator is not None):
             response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
@@ -193,7 +200,7 @@ class MeetingTests(MeetingMixin, TestCase):
         response = self.client.get(reverse('meeting-detail', kwargs={'pk': self.test_meeting_1.pk}))
         data = response.data
 
-        fields = ('id', 'title', 'description', 'owner', 'subway')
+        fields = ('id', 'title', 'description', 'owner', 'subway', 'group_type')
         check_json(data, fields)
 
         self.assertEqual(data['title'], MEETING_TITLE_1)
@@ -203,7 +210,8 @@ class MeetingTests(MeetingMixin, TestCase):
     def test_meeting_create(self):
         title = 'test meeting title'
         response = self.create_meeting(43.588348, 39.729996, title, self.client)
-        fields = ('id', 'title', 'description', 'owner', 'subway', 'coordinates', 'meeting_date')
+        fields = ('id', 'title', 'description', 'owner', 'subway',
+                  'coordinates', 'meeting_date', 'group_type')
         data = response.data
         check_json(data, fields)
 
@@ -298,13 +306,14 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
                 'title': self.NEW_MEET_TITLE,
                 'description': self.NEW_MEET_DESC,
                 'coordinates': self.coords,
-                'meeting_date': MEETING_DATE_1.strftime("%Y-%m-%d %H:%M:%S")
+                'meeting_date': MEETING_DATE_1.strftime("%Y-%m-%d %H:%M:%S"),
+                'group_type': GROUP_MEETING
             }),
             content_type='application/json'
         )
 
         data = response.data
-        fields = ('id', 'title', 'description', 'coordinates', 'owner', 'meeting_date')
+        fields = ('id', 'title', 'description', 'coordinates', 'owner', 'meeting_date', 'group_type')
         check_json(data, fields)
         self.assertEqual(data['title'], self.NEW_MEET_TITLE)
         self.assertEqual(data['description'], self.NEW_MEET_DESC)
@@ -351,13 +360,27 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
         self.assertEqual(response.status_code, 401)
 
 
-class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
+class ConfirmCases(ConfirmMixin, MeetingTests, TransactionTestCase):
     def setUp(self):
         super().setUp()
 
+    def test_list_confirms(self):
+        meeting_creator = client_creation('creator', 'lol')
+        meeting_resp = self.create_meeting(1, 1, 'keklol', meeting_creator)
+        fst_successor = client_creation('fst_successor', 'lol')
+        snd_successor = client_creation('snd_successor', 'lol')
+        meeting_id = meeting_resp.data['id']
+        fst_confirm_r = fst_successor.post(reverse('meeting-confirm', kwargs={'pk': meeting_id}))
+        snd_confirm_r = snd_successor.post(reverse('meeting-confirm', kwargs={'pk': meeting_id}))
+        creator_confirmations_r = meeting_creator.get(reverse('confirms-list'))
+        fields = ('id', 'title', 'description', 'owner', 'subway', 'group_type')
+        fst_meeting = creator_confirmations_r.data[0]['meeting']
+        snd_meeting = creator_confirmations_r.data[1]['meeting']
+        check_json(fst_meeting, fields)
+        check_json(snd_meeting, fields)
+
     def test_approve__success(self):
         self.assertFalse(self.test_confirm.is_approved)
-
         response = self.client.put(
             reverse('confirm-action', kwargs={'pk': self.test_confirm.pk}),
             json.dumps({
@@ -366,13 +389,9 @@ class UpdateConfirmCases(ConfirmMixin, TransactionTestCase):
             }),
             content_type='application/json',
         )
-
         code = response.status_code
-
         self.assertEqual(code, 200)
-
         confirm = Confirm.objects.get(pk=self.test_confirm.pk)
-
         self.assertTrue(confirm.is_approved)
         self.assertTrue(confirm.is_read)
 

@@ -1,8 +1,9 @@
 from chat.models import Confirm
 from core.models import User, Meeting, UserPhotos, SocialData
 from core.permissions import IsStaffOrMe, IsStaffOrOwner
-from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSerializer, ConfirmSerializer, \
-    SocialSerializer
+from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSerializer, \
+    ConfirmSerializer, ConfirmExtendedSerializer, SocialSerializer
+
 
 
 class UserMixin(object):
@@ -43,9 +44,12 @@ class PhotoMixin(object):
 class ConfirmMixin(object):
     model = Confirm
     queryset = Confirm.objects.all()
-    serializer_class = ConfirmSerializer
+    serializer_class = ConfirmExtendedSerializer
     who_can_update = IsStaffOrOwner
     owner_path = 'meeting.owner'
+
+class ConfirmBasicMixin(ConfirmMixin):
+    serializer_class = ConfirmSerializer
 
 
 class SocialMixin(object):

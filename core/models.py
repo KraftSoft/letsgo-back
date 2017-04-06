@@ -17,9 +17,9 @@ class User(AbstractUser):
         obj = self.photos.filter(is_avatar=True).first()
 
         if not obj:
-            return ''
+            obj = self.photos.filter().first()
 
-        if not obj.photo:
+        if not obj or not obj.photo:
             return ''
 
         return build_absolute_url(obj.photo)
@@ -34,6 +34,7 @@ class Meeting(models.Model):
     date_create = models.DateTimeField(auto_now=True)
     meeting_date = models.DateTimeField()
     last_modify = models.DateTimeField(auto_now_add=True)
+    group_type = models.SmallIntegerField()
 
 
 class UserPhotos(models.Model):
