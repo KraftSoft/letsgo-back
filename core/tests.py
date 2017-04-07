@@ -461,11 +461,3 @@ class UploadDeletePhotoTest(AuthUserMixin, TestCase):
         data = response.data
         self.assertEqual(data['status'], 204)
         os.remove(file_name)
-
-
-class MeetingTypesTest(AuthUserMixin, TestCase):
-    def test_types(self):
-        kek = self.client.get(reverse('meeting-types')).data['msg']
-
-        fields = ('id', 'title', 'description', 'owner', 'subway', 'group_type')
-

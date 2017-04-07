@@ -199,11 +199,8 @@ class DeletePhoto(GeneralPermissionMixin, PhotoMixin, DestroyAPIView):
 
 class SetAvatar(GeneralPermissionMixin, PhotoMixin, UpdateAPIView):
     def put(self, request, *args, **kwargs):
-
         obj_pk = kwargs['pk']
-
         try:
-
             UserPhotos.objects.filter(owner=self.request.user, is_avatar=True).update(is_avatar=False)
 
             obj = UserPhotos.objects.get(pk=obj_pk, owner=self.request.user)
