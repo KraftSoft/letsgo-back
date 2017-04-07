@@ -12,6 +12,7 @@ from core.constants import MINE, APPROVED, DISAPPROVED
 from chat.models import Confirm
 from core.models import User, Meeting, UserPhotos, SocialData
 from core.utils import reverse_full, build_absolute_url
+import hashlib
 
 
 class SmartUpdaterMixin(object):
@@ -224,6 +225,7 @@ class JsonResponseSerializer(serializers.Serializer):
 
     status = serializers.IntegerField()
     msg = serializers.CharField(max_length=512)
+    data = serializers.JSONField(required=False)
 
 
 class ConfirmExtendedSerializer(ConfirmSerializer):
@@ -265,7 +267,8 @@ class AuthSerializer(serializers.Serializer):
                 attrs['user'] = existing_social_data.user
                 return attrs
 
-            user = User.objects.create(first_name=first_name)
+            username = hashlib.sha224('{0}{1}'.format(token, social_slug).encode('utf-8')).hexdigest()[:20]
+            user = User.objects.create(first_name=first_name, username=username)
             user.save()
 
             social = SocialData.objects.create(
@@ -280,5 +283,5 @@ class AuthSerializer(serializers.Serializer):
             attrs['user'] = user
             return attrs
         else:
-            msg = _('Must include "social_slug", "external_id" and "token".')
+            msg = 'Must include "social_slug", "external_id" and "token".'
             raise serializers.ValidationError(msg, code='authorization')
