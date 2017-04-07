@@ -176,15 +176,18 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     group_type = serializers.IntegerField(required=True)
 
+    meeting_type = serializers.IntegerField(required=False)
+
     def get_color_status(self, obj):
         request_user = self.context['request'].user
         if(request_user.id == obj.owner.id):
             return (MINE)
-        check_confirm = list(Confirm.objects.filter(user__id=request_user.id))
-        if len(check_confirm) == 0 or not check_confirm[0].is_approved:
-            return DISAPPROVED
-        else:
+        # all_conf = list(Confirm.objects.filter(user=request_user, meeting=obj))
+        check_confirm = Confirm.objects.filter(
+            user=request_user, meeting=obj, is_approved=APPROVED).exists()
+        if check_confirm:
             return APPROVED
+        return DISAPPROVED
 
     def get_href(self, obj):
         return reverse_full('meeting-detail', kwargs={'pk': obj.id})
@@ -211,7 +214,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ('id', 'title', 'meeting_date', 'description', 'group_type',
+        fields = ('id', 'title', 'meeting_date', 'description', 'group_type', 'meeting_type',
                   'owner', 'coordinates', 'subway', 'href', 'confirms', 'color_status')
 
 

@@ -47,6 +47,7 @@ class ConfirmMixin(object):
     who_can_update = IsStaffOrOwner
     owner_path = 'meeting.owner'
 
+
 class ConfirmBasicMixin(ConfirmMixin):
     serializer_class = ConfirmSerializer
 
