@@ -260,13 +260,19 @@ class AuthSerializer(serializers.Serializer):
         first_name = attrs.get('first_name')
 
         if social_slug and external_id and token and first_name:
+
+            # TODO IT IS NEED TO CHECK TOKEN BY VK
+            # AND CHECK THAT USER WITH TOKEN HAVE VK_ID LIKE A external_id
             existing_social_data = SocialData.objects.filter(
                 social_slug=social_slug,
                 external_id=external_id,
-                token=token
             ).last()
 
             if existing_social_data:
+
+                existing_social_data.token = token
+                existing_social_data.save()
+
                 attrs['user'] = existing_social_data.user
                 return attrs
 
@@ -286,5 +292,5 @@ class AuthSerializer(serializers.Serializer):
             attrs['user'] = user
             return attrs
         else:
-            msg = 'Must include "social_slug", "external_id" and "token".'
+            msg = 'Must include "social_slug", "external_id", "first_name" and "token".'
             raise serializers.ValidationError(msg, code='authorization')
