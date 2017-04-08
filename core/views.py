@@ -19,7 +19,8 @@ from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from chat.models import Confirm
-from core.constants import BASE_ERROR_MSG, MAX_MEETINGS, MOSCOW_LAT, MOSCOW_LNG, MOSCKOW_R
+from core.constants import BASE_ERROR_MSG, MAX_MEETINGS,\
+    MOSCOW_LAT, MOSCOW_LNG, MOSCKOW_R, MEETING_CATEGORIES
 
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin, ConfirmBasicMixin
@@ -74,6 +75,7 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
             self.lat = MOSCOW_LAT
             self.lng = MOSCOW_LNG
             self.r = MOSCKOW_R
+        self.meeting_type = request.GET.get('type', None)
         return super().get(request, *args, **kwargs)
 
 
@@ -254,8 +256,8 @@ class AcceptConfirm(GeneralPermissionMixin, ConfirmBasicMixin, UpdateAPIView):
 
 class MeetingTypes(GeneralPermissionMixin, ListAPIView):
     def get(self, request, *args, **kwargs):
-        answer = {}
+        answer = []
         for k, v in MEETING_CATEGORIES.items():
-            answer[k] = v[0]
+            answer.append((k, v[0]))
         json_data = json.dumps(answer)
-        return Response(JRS(JsonResponse(status=200, msg=json_data)).data)
+        return Response(JRS(JsonResponse(status=200, msg='ok', data=json_data)).data)

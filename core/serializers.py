@@ -182,9 +182,8 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
         request_user = self.context['request'].user
         if(request_user.id == obj.owner.id):
             return (MINE)
-        # all_conf = list(Confirm.objects.filter(user=request_user, meeting=obj))
         check_confirm = Confirm.objects.filter(
-            user=request_user, meeting=obj, is_approved=APPROVED).exists()
+            user__id=request_user.id, meeting=obj, is_approved=True).exists()
         if check_confirm:
             return APPROVED
         return DISAPPROVED
@@ -206,7 +205,8 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
             coordinates=validated_data['coordinates'],
             meeting_date=validated_data['meeting_date'],
             owner_id=user.id,
-            group_type=validated_data['group_type']
+            group_type=validated_data['group_type'],
+            meeting_type=validated_data.get('meeting_type', 0)
         )
         meeting.save()
 

@@ -3,6 +3,7 @@ from core.models import User, Meeting, UserPhotos, SocialData
 from core.permissions import IsStaffOrMe, IsStaffOrOwner
 from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSerializer, \
     ConfirmSerializer, ConfirmExtendedSerializer, SocialSerializer
+from core.constants import MEETING_CATEGORIES
 
 
 class UserMixin(object):
@@ -27,8 +28,14 @@ class MeetingMixin(object):
             return Meeting.objects.all()
         radius = self.r * 1000
         query = "select *  from core_meeting where ST_Distance_Sphere(coordinates, " \
-                "ST_MakePoint({lat},{lng})) <=  {r};".format(lat=self.lat, lng=self.lng, r=radius)
-        return Meeting.objects.raw(query)
+                "ST_MakePoint({lat},{lng})) <=  {r}".format(lat=self.lat, lng=self.lng, r=radius)
+        if self.meeting_type is not None:
+            type_id = MEETING_CATEGORIES.get(self.meeting_type)[0]
+            add = " and meeting_type={0}".format(type_id)
+            query = query + add
+            check = list(Meeting.objects.filter())
+            kek = 1
+        return Meeting.objects.raw(query + ";")
 
 
 class PhotoMixin(object):

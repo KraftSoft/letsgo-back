@@ -93,23 +93,28 @@ class MeetingMixin(AuthUserMixin):
         )
 
     def create_meeting(self, lat, lng, title, creator=None,
-                       date=None, date_create=None, group_type=0):
+                       date=None, date_create=None, group_type=0, meeting_type=None):
         desc = title + "desk"
         coords = {
             'lat': lat,
             'lng': lng
         }
         request_data = None
+        request_dict = {}
         if date is None:
             date = timezone.now().isoformat()
         if date_create is None:
-            request_data = json.dumps({'title': title, 'description': desc, 'group_type': group_type,
-                                       'coordinates': coords, 'meeting_date': date})
+            request_dict = {'title': title, 'description': desc,
+                            'group_type': group_type, 'coordinates': coords,
+                            'meeting_date': date}
         else:
-            request_data = json.dumps({'title': title, 'description': desc, 'date_create': date_create,
-                                       'group_type': group_type, 'coordinates': coords, 'meeting_date': date})
-
-        if (creator is not None):
+            request_dict = {'title': title, 'description': desc,
+                            'date_create': date_create, 'group_type': group_type,
+                            'coordinates': coords, 'meeting_date': date}
+        if meeting_type is not None:
+            request_dict['meeting_type'] = meeting_type
+        request_data = json.dumps(request_dict)
+        if creator is not None:
             response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
             return response
         else:
@@ -124,7 +129,6 @@ class ConfirmMixin(MeetingMixin):
 
 
 class CreateUserTests(TestCase):
-
     def test_first_login(self):
         response = self.client.post(
             reverse('auth'),
@@ -139,7 +143,6 @@ class CreateUserTests(TestCase):
         check_json(response.data, ('token', 'href'))
 
     def test_second_login(self):
-
         first_name = 'Alla'
         ext_id = 11211
         test_token = 'test token'
@@ -208,7 +211,7 @@ class MeetingTests(MeetingMixin, TestCase):
         title = 'test meeting title'
         response = self.create_meeting(43.588348, 39.729996, title, self.client)
         fields = ('id', 'title', 'description', 'owner', 'subway',
-                  'coordinates', 'meeting_date', 'group_type')
+                  'coordinates', 'meeting_date', 'group_type', 'meeting_type')
         data = response.data
         check_json(data, fields)
 
@@ -251,6 +254,24 @@ class MeetingTests(MeetingMixin, TestCase):
         data_all = response_all.data
         self.assertEqual(len(data), len(data_all))
 
+    def test_get_meeting_type(self):
+        client1 = client_creation("vasyan", "qwerty")
+        # self, lat, lng, title, creator=None,
+        #                date=None, date_create=None, group_type=0, meeting_type=None
+        for i in range(0, 3):
+            response = self.create_meeting(i, i, "title" + str(i), client1,
+                                           None, None, 0, 1)
+            self.assertEqual(response.data['meeting_type'], 1)
+        check = list(Meeting.objects.all())
+        test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}&type={3}"
+        response = self.client.get(test_url.format(1, 1, 2000000000, 'sport'))
+        data = response.data
+        self.assertEqual(len(data), 3)
+        test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}"
+        response = self.client.get(test_url.format(1, 1, 2000000000))
+        data = response.data
+        self.assertEqual(len(data), 5)
+
 
 class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
     NEW_MEET_TITLE = 'New meeting title'
@@ -274,10 +295,10 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
         NEW_FN = 'Юля'
 
         check = json.dumps({
-                'username': NEW_USER_NAME,
-                'about': NEW_ABOUT,
-                'first_name': NEW_FN
-            }),
+            'username': NEW_USER_NAME,
+            'about': NEW_ABOUT,
+            'first_name': NEW_FN
+        }),
         response = self.client.put(
             reverse('user-detail', kwargs={'pk': self.test_user.pk}),
             json.dumps({
@@ -376,24 +397,28 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
         snd_meeting = creator_confirmations_r.data[1]['meeting']
         check_json(fst_meeting, fields)
         check_json(snd_meeting, fields)
+        self.assertEqual(fst_meeting['color_status'], MINE)
+        self.assertEqual(snd_meeting['color_status'], MINE)
 
     def test_proper_color_serialization(self):
-        kek = 1
-        # self.assertEqual(fst_meeting['color_status'], MINE)
-        # self.assertEqual(snd_meeting['color_status'], MINE)
-        # response = meeting_creator.put(
-        #     reverse('confirm-action', kwargs={'pk': confirmed_conf_id}),
-        #     json.dumps({
-        #         'is_approved': True,
-        #         'is_read': True
-        #     }),
-        #     content_type='application/json',
-        # )
-        # meetings_from_fst = fst_successor.get(reverse('meetings-list'))
-        # data = meetings_from_fst.data
-        # confirmed = [x for x in data if x[''] == value]
-        # if data[0]['color_status'] == DISAPPROVED and data[1]['color_status'] == DISAPPROVED:
-        #     self.assertEqual(0, 1)
+        confirmed_conf = list(Confirm.objects.all().filter(user__username='fst_successor'))
+        response = self.meeting_creator.put(
+            reverse('confirm-action', kwargs={'pk': confirmed_conf[0].id}),
+            json.dumps({
+                'is_approved': True,
+                'is_read': True
+            }),
+            content_type='application/json',
+        )
+        all_confs = list(Confirm.objects.all().filter(
+            user__username='fst_successor', meeting=confirmed_conf[0].meeting, is_approved=True))
+        meetings = self.fst_successor.get(reverse('meetings-list') + "?lng={0}&lat={1}&r={2}".format(1, 1, 10))
+        all_meetings = list(Meeting.objects.all())
+        data = meetings.data
+        self.assertEqual(data[0]['color_status'], APPROVED)
+        meetings = self.snd_successor.get(reverse('meetings-list') + "?lng={0}&lat={1}&r={2}".format(1, 1, 10))
+        data = meetings.data
+        self.assertEqual(data[0]['color_status'], DISAPPROVED)
 
     def test_approve__success(self):
         self.assertFalse(self.test_confirm.is_approved)
@@ -434,6 +459,19 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
     def test_try_confir_twise(self):
         response = self.client.post(reverse('meeting-confirm', kwargs={'pk': self.test_meeting_1.id}))
         self.assertEqual(response.data['status'], 400)
+
+
+class MeetingTypesTest(ConfirmMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+
+    def test_all_types(self):
+        check = self.client.get(reverse('meeting-types'))
+        types = [["general", 0], ["sport", 1], ["bar", 2], ["dance", 3]]
+        data = check.data['data']
+        data = json.loads(data)
+        for tup in data:
+            self.assertTrue(tup in types)
 
 
 class UploadDeletePhotoTest(AuthUserMixin, TestCase):
