@@ -8,6 +8,8 @@ from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.settings import api_settings
 from django.core.urlresolvers import reverse
 from core.constants import MINE, APPROVED, DISAPPROVED
+import requests
+import json
 
 from chat.models import Confirm
 from core.models import User, Meeting, UserPhotos, SocialData
@@ -46,7 +48,7 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'about', 'password', 'username', 'avatar', 'href')
+        fields = ('id', 'first_name', 'about', 'password', 'avatar', 'href')
 
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},

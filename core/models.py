@@ -9,7 +9,7 @@ from django.contrib.gis.db import models as gis_models
 class User(AbstractUser):
     about = models.CharField(max_length=256, blank=True)
 
-    USERNAME_FIELD = 'first_name'
+    USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = tuple()
 
     def get_avatar(self):
