@@ -8,7 +8,6 @@ from django.contrib.gis.db import models as gis_models
 
 class User(AbstractUser):
     about = models.CharField(max_length=256, blank=True)
-
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = tuple()
     birth_date = models.DateField(null=True, blank=False)

@@ -88,7 +88,7 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
             self.age_to = None
         try:
             self.gender = int(request.GET.get('gender'))
-            if self.gender != MALE and self.gender != FEMALE:
+            if self.gender not in (MALE, FEMALE):
                 self.gender = None
         except:
             self.gender = None

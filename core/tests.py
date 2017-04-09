@@ -41,6 +41,7 @@ GROUP_MEETING = 1
 
 DEFAULT_BIRTH_DATE = datetime.date(2000, 1, 1)
 
+
 def client_creation(username, password,
                     birth_date=DEFAULT_BIRTH_DATE, gender=MALE):
     test_user = User.objects.\
@@ -189,12 +190,12 @@ class UserTests(AuthUserMixin, TestCase):
 
     def test_get_user(self):
         response = self.client.get(reverse('user-detail', kwargs={'pk': self.test_user.pk}))
-        fields = ('id', 'first_name', 'about', 'username')
+        fields = ('id', 'first_name', 'about')
         check_json(response.data, fields)
 
     def test_get_myself(self):
         resp = self.client.get(reverse('user-detail'))
-        self.assertEqual(resp.data['username'], 'masha')
+        self.assertEqual(resp.data['id'], self.test_user.id)
 
 
 class MeetingTests(MeetingMixin, TestCase):
@@ -324,31 +325,25 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
         super().setUp()
 
     def test_update_user(self):
-        NEW_USER_NAME = 'july'
         NEW_ABOUT = 'bla bla bla'
         NEW_FN = 'Юля'
 
         check = json.dumps({
-            'username': NEW_USER_NAME,
             'about': NEW_ABOUT,
             'first_name': NEW_FN
         }),
         response = self.client.put(
             reverse('user-detail', kwargs={'pk': self.test_user.pk}),
             json.dumps({
-                'username': NEW_USER_NAME,
                 'about': NEW_ABOUT,
                 'first_name': NEW_FN
             }),
             content_type='application/json',
         )
 
-        fields = ('id', 'first_name', 'about', 'username')
+        fields = ('id', 'first_name', 'about')
         data = response.data
-
         check_json(data, fields)
-
-        self.assertEqual(response.data['username'], NEW_USER_NAME)
         self.assertEqual(response.data['first_name'], NEW_FN)
         self.assertEqual(response.data['about'], NEW_ABOUT)
 
