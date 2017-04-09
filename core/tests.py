@@ -107,8 +107,6 @@ class MeetingMixin(AuthUserMixin):
             'lat': lat,
             'lng': lng
         }
-        request_data = None
-        request_dict = {}
         if date is None:
             date = timezone.now().date().isoformat()
         if date_create is None:
@@ -327,21 +325,18 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
     def test_update_user(self):
         NEW_ABOUT = 'bla bla bla'
         NEW_FN = 'Юля'
-
-        check = json.dumps({
-            'about': NEW_ABOUT,
-            'first_name': NEW_FN
-        }),
         response = self.client.put(
             reverse('user-detail', kwargs={'pk': self.test_user.pk}),
             json.dumps({
                 'about': NEW_ABOUT,
-                'first_name': NEW_FN
+                'first_name': NEW_FN,
+                'gender': FEMALE,
+                'birth_date': DEFAULT_BIRTH_DATE.isoformat()
             }),
             content_type='application/json',
         )
 
-        fields = ('id', 'first_name', 'about')
+        fields = ('id', 'first_name', 'about', 'gender', 'birth_date')
         data = response.data
         check_json(data, fields)
         self.assertEqual(response.data['first_name'], NEW_FN)

@@ -33,10 +33,10 @@ class SmartUpdaterMixin(object):
 
 class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
-    UPDATE_AVAILABLE_FIELDS = ('first_name', 'about')
+    UPDATE_AVAILABLE_FIELDS = ('first_name', 'about', 'gender', 'birth_date')
     avatar = SerializerMethodField()
     href = SerializerMethodField()
-    birth_date = serializers.DateTimeField(required=True)
+    birth_date = serializers.DateField(required=True)
     gender = serializers.IntegerField(required=True)
 
     def get_avatar(self, obj):
@@ -96,7 +96,8 @@ class UserSerializerExtended(UserSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'about', 'password', 'avatar', 'photos', 'href')
+        fields = ('id', 'first_name', 'about', 'birth_date', 'gender',
+                  'password', 'avatar', 'photos', 'href')
 
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
