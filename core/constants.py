@@ -8,6 +8,8 @@ MINE = 'mine'
 APPROVED = 'approved'
 DISAPPROVED = 'disapproved'
 
+FEMALE = 0
+MALE = 1
 
 MEETING_CATEGORIES = {
     "general": (0, u'общее'),

@@ -21,11 +21,11 @@ from rest_framework.views import APIView
 
 from chat.models import Confirm
 from core.constants import BASE_ERROR_MSG, MAX_MEETINGS,\
-    MOSCOW_LAT, MOSCOW_LNG, MAX_RADIUS, MEETING_CATEGORIES
+    MOSCOW_LAT, MOSCOW_LNG, MAX_RADIUS, MEETING_CATEGORIES, MALE, FEMALE
 
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin, ConfirmBasicMixin
-from core.models import Meeting, UserPhotos
+from core.models import Meeting, UserPhotos, User
 from core.permissions import GeneralPermissionMixin
 from core.serializers import JsonResponseSerializer as JRS, AuthSerializer
 from core.utils import JsonResponse, build_absolute_url
@@ -48,7 +48,12 @@ class UserList(UserMixin, generics.ListCreateAPIView):
 
 
 class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestroyAPIView):
-    pass
+        def get(self, request, *args, **kwargs):
+            try:
+                return self.retrieve(request, *args, **kwargs)
+            except User.DoesNotExist:
+                return Response(JRS(JsonResponse(
+                    status=400, msg='User does not exist')).data)
 
 
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
@@ -75,8 +80,21 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
             self.lat = MOSCOW_LAT
             self.lng = MOSCOW_LNG
             self.r = MAX_RADIUS
-
+        try:
+            self.age_from = int(request.GET.get('age_from'))
+            self.age_to = int(request.GET.get('age_to'))
+        except (ValueError, TypeError):
+            self.age_from = None
+            self.age_to = None
+        try:
+            self.gender = int(request.GET.get('gender'))
+            if self.gender not in (MALE, FEMALE):
+                self.gender = None
+        except:
+            self.gender = None
         self.meeting_type = request.GET.get('type')
+        if self.meeting_type not in MEETING_CATEGORIES:
+            self.meeting_type = None
         return super().get(request, *args, **kwargs)
 
 
@@ -247,7 +265,9 @@ class ConfirmCreate(GeneralPermissionMixin, CreateAPIView):
 
 class ConfirmsList(GeneralPermissionMixin, ConfirmMixin, ListAPIView):
     def get(self, request, *args, **kwargs):
-        self.queryset = Confirm.objects.filter(meeting__owner=request.user, is_approved=False, is_rejected=False)
+        self.queryset = Confirm.objects.filter(
+            meeting__owner=request.user, is_approved=False, is_rejected=False)
+        self.queryset.update(is_read=True)
         return super().get(request, *args, **kwargs)
 
 
@@ -260,5 +280,13 @@ class MeetingTypes(GeneralPermissionMixin, ListAPIView):
         answer = []
         for k, v in MEETING_CATEGORIES.items():
             answer.append((k, v[0]))
+        json_data = json.dumps(answer)
+        return Response(JRS(JsonResponse(status=200, msg='ok', data=json_data)).data)
+
+
+class UnreadConfirms(GeneralPermissionMixin, ListAPIView):
+    def get(self, request, *args, **kwargs):
+        count = Confirm.objects.filter(meeting__owner=request.user, is_read=False).count()
+        answer = {"unread": count}
         json_data = json.dumps(answer)
         return Response(JRS(JsonResponse(status=200, msg='ok', data=json_data)).data)

@@ -33,10 +33,11 @@ class SmartUpdaterMixin(object):
 
 class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
-    UPDATE_AVAILABLE_FIELDS = ('first_name', 'about', 'username')
-
+    UPDATE_AVAILABLE_FIELDS = ('first_name', 'about', 'gender', 'birth_date')
     avatar = SerializerMethodField()
     href = SerializerMethodField()
+    birth_date = serializers.DateField(required=True)
+    gender = serializers.IntegerField(required=True)
 
     def get_avatar(self, obj):
         return obj.get_avatar()
@@ -46,7 +47,8 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'about', 'password', 'avatar', 'href')
+        fields = ('id', 'gender', 'birth_date',
+                  'first_name', 'about', 'password', 'avatar', 'href')
 
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
@@ -55,10 +57,7 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-
-        user = User.objects.create(
-            username=validated_data['username']
-        )
+        user = User.objects.create(username=validated_data['username'])
         user.set_password(validated_data['password'])
         user.save()
 
@@ -83,7 +82,7 @@ class UserPhotoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserPhotos
-        fields = ('photo', 'delete_photo', 'set_avatar' )
+        fields = ('photo', 'delete_photo', 'set_avatar')
 
 
 class PhotoSerializer(serializers.ModelSerializer):
@@ -97,7 +96,8 @@ class UserSerializerExtended(UserSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'about', 'password', 'username', 'avatar', 'photos', 'href')
+        fields = ('id', 'first_name', 'about', 'birth_date', 'gender',
+                  'password', 'avatar', 'photos', 'href')
 
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
@@ -170,7 +170,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     confirms = ConfirmSerializer(required=False)
 
-    meeting_date = serializers.DateTimeField(required=True)
+    meeting_date = serializers.DateField(required=True)
 
     color_status = serializers.SerializerMethodField()
 

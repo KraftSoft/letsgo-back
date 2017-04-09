@@ -8,9 +8,10 @@ from django.contrib.gis.db import models as gis_models
 
 class User(AbstractUser):
     about = models.CharField(max_length=256, blank=True)
-
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = tuple()
+    birth_date = models.DateField(null=True, blank=False)
+    gender = models.SmallIntegerField(null=True, blank=False)
 
     def get_avatar(self):
 
@@ -32,7 +33,7 @@ class Meeting(models.Model):
     subway = models.ForeignKey(Subway, null=True, blank=True, related_name='meetings')
     coordinates = gis_models.PointField(null=True, blank=False)
     date_create = models.DateTimeField(auto_now=True)
-    meeting_date = models.DateTimeField()
+    meeting_date = models.DateField()
     last_modify = models.DateTimeField(auto_now_add=True)
     group_type = models.SmallIntegerField()
     meeting_type = models.SmallIntegerField(default=0)

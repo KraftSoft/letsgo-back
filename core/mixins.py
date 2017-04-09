@@ -4,14 +4,24 @@ from core.permissions import IsStaffOrMe, IsStaffOrOwner
 from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSerializer, \
     ConfirmSerializer, ConfirmExtendedSerializer, SocialSerializer
 from core.constants import MEETING_CATEGORIES, MAX_RADIUS
+import datetime
 
 
 class UserMixin(object):
     model = User
     serializer_class = UserSerializerExtended
     queryset = User.objects.all()
-
     who_can_update = IsStaffOrMe
+
+    def get_object(self):
+        pk = self.kwargs.get('pk', None)
+        if pk is None:
+            pk = self.request.user.pk
+        try:
+            obj = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise
+        return obj
 
 
 class MeetingMixin(object):
@@ -32,7 +42,6 @@ class MeetingMixin(object):
             return Meeting.objects.all()
 
         radius = self.r * 1000 if self.r > MAX_RADIUS else MAX_RADIUS
-
         queryset = Meeting.objects.all().extra(
             where=[
                 'ST_Distance_Sphere(coordinates, ST_MakePoint({lat},{lng})) <=  {r}'.format(
@@ -45,6 +54,14 @@ class MeetingMixin(object):
         if self.meeting_type is not None:
             type_id = MEETING_CATEGORIES.get(self.meeting_type)[0]
             queryset = queryset.filter(meeting_type=type_id)
+        if self.gender is not None:
+            queryset = queryset.filter(owner__gender=self.gender)
+        if self.age_from is not None and self.age_to is not None:
+            birth_date_from = datetime.date.today() - datetime.timedelta(days=(self.age_to*365.25))
+            birth_date_to = datetime.date.today() - datetime.timedelta(days=(self.age_from*365.25))
+            queryset = queryset.filter(owner__birth_date__range=[
+                birth_date_from, birth_date_to
+            ])
         return queryset
 
 
