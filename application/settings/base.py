@@ -98,7 +98,10 @@ DATABASES = {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': DB_NAME,
         'USER': DB_USER,
-        'PASSWORD': DB_PASSWORD
+        'PASSWORD': DB_PASSWORD,
+        'OPTIONS': {
+            'options': '-c search_path=public'
+        },
     }
 }
 
