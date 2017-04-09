@@ -291,7 +291,7 @@ class MeetingTests(MeetingMixin, TestCase):
                                            None, None, 0, 1)
         response = self.create_meeting(5, 5, "title" + str(5),
                                        client2, None, None, 0, 1)
-        test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}&gender={4}"
+        test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}&gender={3}"
         meet_r = self.client.get(test_url.format(1, 1, 2000000000, MALE))
         self.assertEqual(len(meet_r.data), 4)
 

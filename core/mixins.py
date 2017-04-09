@@ -41,7 +41,6 @@ class MeetingMixin(object):
             return Meeting.objects.all()
 
         radius = self.r * 1000 if self.r > MAX_RADIUS else MAX_RADIUS
-
         queryset = Meeting.objects.all().extra(
             where=[
                 'ST_Distance_Sphere(coordinates, ST_MakePoint({lat},{lng})) <=  {r}'.format(
@@ -54,6 +53,8 @@ class MeetingMixin(object):
         if self.meeting_type is not None:
             type_id = MEETING_CATEGORIES.get(self.meeting_type)[0]
             queryset = queryset.filter(meeting_type=type_id)
+        if self.gender is not None:
+            queryset = queryset.filter(owner__gender=self.gender)
         return queryset
 
 
