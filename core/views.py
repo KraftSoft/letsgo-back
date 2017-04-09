@@ -25,7 +25,7 @@ from core.constants import BASE_ERROR_MSG, MAX_MEETINGS,\
 
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin, ConfirmBasicMixin
-from core.models import Meeting, UserPhotos
+from core.models import Meeting, UserPhotos, User
 from core.permissions import GeneralPermissionMixin
 from core.serializers import JsonResponseSerializer as JRS, AuthSerializer
 from core.utils import JsonResponse, build_absolute_url
@@ -48,7 +48,15 @@ class UserList(UserMixin, generics.ListCreateAPIView):
 
 
 class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestroyAPIView):
-    pass
+        def get(self, request, *args, **kwargs):
+            try:
+                return self.retrieve(request, *args, **kwargs)
+            except User.DoesNotExist:
+                return Response(JRS(JsonResponse(
+                    status=400, msg='User does not exist')).data)
+
+
+
 
 
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):

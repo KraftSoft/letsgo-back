@@ -185,6 +185,10 @@ class UserTests(AuthUserMixin, TestCase):
         fields = ('id', 'first_name', 'about', 'username')
         check_json(response.data, fields)
 
+    def test_get_myself(self):
+        resp = self.client.get(reverse('user-detail'))
+        self.assertEqual(resp.data['username'], 'masha')
+
 
 class MeetingTests(MeetingMixin, TestCase):
     def setUp(self):

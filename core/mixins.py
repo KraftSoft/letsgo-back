@@ -12,6 +12,17 @@ class UserMixin(object):
     queryset = User.objects.all()
     who_can_update = IsStaffOrMe
 
+    def get_object(self):
+        pk = self.kwargs.get('pk', None)
+        if pk is None:
+            pk = self.request.user.pk
+        try:
+            obj = User.objects.get(pk=pk)
+        except User.DoesNotExist:
+            raise
+        return obj
+
+
 
 class MeetingMixin(object):
     model = Meeting
