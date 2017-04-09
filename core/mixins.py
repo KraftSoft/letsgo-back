@@ -57,8 +57,8 @@ class MeetingMixin(object):
         if self.gender is not None:
             queryset = queryset.filter(owner__gender=self.gender)
         if self.age_from is not None and self.age_to is not None:
-            birth_date_from = datetime.date.today() - datetime.timedelta(days=(self.age_to*365.4))
-            birth_date_to = datetime.date.today() - datetime.timedelta(days=(self.age_from*365.4))
+            birth_date_from = datetime.date.today() - datetime.timedelta(days=(self.age_to*365.24))
+            birth_date_to = datetime.date.today() - datetime.timedelta(days=(self.age_from*365.24))
             queryset = queryset.filter(owner__birth_date__range=[
                 birth_date_from, birth_date_to
             ])
