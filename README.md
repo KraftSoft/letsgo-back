@@ -142,3 +142,13 @@ is_approved=True
 Редактирование профиля
 ----------------------
 curl 37.46.128.134/user-detail/1/ -H "Content-Type: application/json" -H "Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2" -X PUT -d '{"username": "new_nick", "firs_name": "new first name", "about": "new about"}'
+
+
+Количество непрочитанных событий
+--------------------------------
+http GET http://37.46.128.134/unread-confirms/  'Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2'
+
+
+Все возможные типы встреч
+--------------------------------
+http GET http://37.46.128.134/meeting-types/  'Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2'

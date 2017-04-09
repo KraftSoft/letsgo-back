@@ -10,7 +10,6 @@ class UserMixin(object):
     model = User
     serializer_class = UserSerializerExtended
     queryset = User.objects.all()
-
     who_can_update = IsStaffOrMe
 
 
