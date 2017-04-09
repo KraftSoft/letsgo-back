@@ -38,7 +38,6 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
     href = SerializerMethodField()
     birth_date = serializers.DateTimeField(required=True)
     gender = serializers.IntegerField(required=True)
-    #username = SerializerMethodField(required=False)
 
     def get_avatar(self, obj):
         return obj.get_avatar()
@@ -170,7 +169,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     confirms = ConfirmSerializer(required=False)
 
-    meeting_date = serializers.DateTimeField(required=True)
+    meeting_date = serializers.DateField(required=True)
 
     color_status = serializers.SerializerMethodField()
 

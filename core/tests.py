@@ -34,7 +34,7 @@ MEETING_DESC_1 = 'Party for everybody :)'
 MEETING_TITLE_2 = 'go drink'
 MEETING_DESC_2 = 'Party for everybody :)'
 
-MEETING_DATE_1 = timezone.now()
+MEETING_DATE_1 = timezone.now().date()
 
 PAIR_MEETING = 0
 GROUP_MEETING = 1
@@ -101,7 +101,7 @@ class MeetingMixin(AuthUserMixin):
         )
 
     def create_meeting(self, lat, lng, title, creator=None,
-                       date=None, date_create=None, group_type=0, meeting_type=None):
+                       date=None, date_create=None, group_type=PAIR_MEETING, meeting_type=None):
         desc = title + "desk"
         coords = {
             'lat': lat,
@@ -110,7 +110,7 @@ class MeetingMixin(AuthUserMixin):
         request_data = None
         request_dict = {}
         if date is None:
-            date = timezone.now().isoformat()
+            date = timezone.now().date().isoformat()
         if date_create is None:
             request_dict = {'title': title, 'description': desc,
                             'group_type': group_type, 'coordinates': coords,
@@ -354,7 +354,7 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
                 'title': self.NEW_MEET_TITLE,
                 'description': self.NEW_MEET_DESC,
                 'coordinates': self.coords,
-                'meeting_date': MEETING_DATE_1.strftime("%Y-%m-%d %H:%M:%S"),
+                'meeting_date': MEETING_DATE_1.strftime("%Y-%m-%d"),
                 'group_type': GROUP_MEETING
             }),
             content_type='application/json'
