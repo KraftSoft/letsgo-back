@@ -247,7 +247,9 @@ class ConfirmCreate(GeneralPermissionMixin, CreateAPIView):
 
 class ConfirmsList(GeneralPermissionMixin, ConfirmMixin, ListAPIView):
     def get(self, request, *args, **kwargs):
-        self.queryset = Confirm.objects.filter(meeting__owner=request.user, is_approved=False, is_rejected=False)
+        self.queryset = Confirm.objects.filter(
+            meeting__owner=request.user, is_approved=False, is_rejected=False)
+       # self.queryset.update(is_read=True)
         return super().get(request, *args, **kwargs)
 
 

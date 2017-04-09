@@ -395,6 +395,9 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
         fields = ('id', 'title', 'description', 'owner', 'subway', 'group_type')
         fst_meeting = creator_confirmations_r.data[0]['meeting']
         snd_meeting = creator_confirmations_r.data[1]['meeting']
+        confims_frombase = list(Confirm.objects.all().filter(user__username='creator'))
+        for item in confims_frombase:
+            self.assertTrue(confims_frombase[0].is_read)
         check_json(fst_meeting, fields)
         check_json(snd_meeting, fields)
         self.assertEqual(fst_meeting['color_status'], MINE)
