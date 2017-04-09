@@ -3,7 +3,7 @@ from core.models import User, Meeting, UserPhotos, SocialData
 from core.permissions import IsStaffOrMe, IsStaffOrOwner
 from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSerializer, \
     ConfirmSerializer, ConfirmExtendedSerializer, SocialSerializer
-from core.constants import MEETING_CATEGORIES
+from core.constants import MEETING_CATEGORIES, MAX_RADIUS
 
 
 class UserMixin(object):
@@ -28,21 +28,33 @@ class MeetingMixin(object):
     serializer_class = MeetingSerializer
     who_can_update = IsStaffOrOwner
     queryset = Meeting.objects.all()
+
     lat = None
     lng = None
     r = None
 
+    meeting_type = None
+
     def get_queryset(self):
+
         if self.lat is None or self.lng is None or self.r is None:
             return Meeting.objects.all()
-        radius = self.r * 1000
-        query = "select *  from core_meeting where ST_Distance_Sphere(coordinates, " \
-                "ST_MakePoint({lat},{lng})) <=  {r}".format(lat=self.lat, lng=self.lng, r=radius)
+
+        radius = self.r * 1000 if self.r > MAX_RADIUS else MAX_RADIUS
+
+        queryset = Meeting.objects.all().extra(
+            where=[
+                'ST_Distance_Sphere(coordinates, ST_MakePoint({lat},{lng})) <=  {r}'.format(
+                    lat=self.lat,
+                    lng=self.lng,
+                    r=radius
+                )
+            ]
+        )
         if self.meeting_type is not None:
             type_id = MEETING_CATEGORIES.get(self.meeting_type)[0]
-            add = " and meeting_type={0}".format(type_id)
-            query += add
-        return Meeting.objects.raw(query)
+            queryset = queryset.filter(meeting_type=type_id)
+        return queryset
 
 
 class PhotoMixin(object):

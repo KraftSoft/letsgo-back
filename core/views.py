@@ -21,7 +21,7 @@ from rest_framework.views import APIView
 
 from chat.models import Confirm
 from core.constants import BASE_ERROR_MSG, MAX_MEETINGS,\
-    MOSCOW_LAT, MOSCOW_LNG, MOSCKOW_R, MEETING_CATEGORIES
+    MOSCOW_LAT, MOSCOW_LNG, MAX_RADIUS, MEETING_CATEGORIES
 
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin, ConfirmBasicMixin
@@ -59,7 +59,6 @@ class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestr
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         user = request.user
-        json = request.data
         date_create = datetime.today()
         count_meetings = Meeting.objects.filter(owner=user, date_create__date=date_create)\
             .count()
@@ -80,8 +79,8 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
         except (ValueError, TypeError):
             self.lat = MOSCOW_LAT
             self.lng = MOSCOW_LNG
-            self.r = MOSCKOW_R
-        self.meeting_type = request.GET.get('type', None)
+            self.r = MAX_RADIUS
+        self.meeting_type = request.GET.get('type')
         self.gender = request.GET.get('gender', None)
         return super().get(request, *args, **kwargs)
 
