@@ -23,7 +23,6 @@ class UserMixin(object):
         return obj
 
 
-
 class MeetingMixin(object):
     model = Meeting
     serializer_class = MeetingSerializer

@@ -56,9 +56,6 @@ class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestr
                     status=400, msg='User does not exist')).data)
 
 
-
-
-
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         user = request.user
@@ -85,6 +82,7 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
             self.lng = MOSCOW_LNG
             self.r = MOSCKOW_R
         self.meeting_type = request.GET.get('type', None)
+        self.gender = request.GET.get('gender', None)
         return super().get(request, *args, **kwargs)
 
 

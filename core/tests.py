@@ -12,7 +12,9 @@ from rest_framework.authtoken.models import Token
 from django.contrib.gis.geos import Point
 import json
 import copy
-from core.constants import MAX_MEETINGS, MINE, APPROVED, DISAPPROVED
+from core.constants import MAX_MEETINGS,\
+    MINE, APPROVED, DISAPPROVED, MALE, FEMALE
+
 from core.models import UserPhotos
 
 timezone.now()
@@ -37,9 +39,10 @@ MEETING_DATE_1 = timezone.now()
 PAIR_MEETING = 0
 GROUP_MEETING = 1
 
+DEFAULT_BIRTH_DATE = datetime.date(2000, 1, 1)
 
 def client_creation(username, password,
-                    birth_date=datetime.date(2000, 1, 1), gender=1):
+                    birth_date=DEFAULT_BIRTH_DATE, gender=MALE):
     test_user = User.objects.\
         create(username=username, birth_date=birth_date, gender=gender)
     test_user.set_password(password)
@@ -59,7 +62,8 @@ def check_json(data, fields):
 
 class AuthUserMixin(object):
     def setUp(self):
-        self.test_user = User.objects.create(username=TEST_USER_1)
+        self.test_user = User.objects.create(username=TEST_USER_1,
+                                             birth_date=DEFAULT_BIRTH_DATE, gender=FEMALE)
         self.test_user.set_password(TEST_USER_PW_1)
         self.test_user.save()
 
@@ -261,7 +265,7 @@ class MeetingTests(MeetingMixin, TestCase):
         data_all = response_all.data
         self.assertEqual(len(data), len(data_all))
 
-    def test_get_meeting_type(self):
+    def test_meeting_type_filter(self):
         client1 = client_creation("vasyan", "qwerty")
         # self, lat, lng, title, creator=None,
         #                date=None, date_create=None, group_type=0, meeting_type=None
@@ -278,6 +282,18 @@ class MeetingTests(MeetingMixin, TestCase):
         response = self.client.get(test_url.format(1, 1, 2000000000))
         data = response.data
         self.assertEqual(len(data), 5)
+
+    def test_gender_filter(self):
+        client1 = client_creation("vasyan", "qwerty")
+        client2 = client_creation("ivan", "qwerty")
+        for i in range(0, 3):
+            response = self.create_meeting(i, i, "title" + str(i), client1,
+                                           None, None, 0, 1)
+        response = self.create_meeting(5, 5, "title" + str(5),
+                                       client2, None, None, 0, 1)
+        test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}&gender={4}"
+        meet_r = self.client.get(test_url.format(1, 1, 2000000000, MALE))
+        self.assertEqual(len(meet_r.data), 4)
 
 
 class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
