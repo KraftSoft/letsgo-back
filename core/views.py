@@ -80,6 +80,12 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
             self.lat = MOSCOW_LAT
             self.lng = MOSCOW_LNG
             self.r = MAX_RADIUS
+        try:
+            self.age_from = int(request.GET.get('age_from'))
+            self.age_to = int(request.GET.get('age_to'))
+        except:
+            self.age_from = None
+            self.age_to = None
         self.meeting_type = request.GET.get('type')
         self.gender = request.GET.get('gender', None)
         return super().get(request, *args, **kwargs)

@@ -4,6 +4,7 @@ from core.permissions import IsStaffOrMe, IsStaffOrOwner
 from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSerializer, \
     ConfirmSerializer, ConfirmExtendedSerializer, SocialSerializer
 from core.constants import MEETING_CATEGORIES, MAX_RADIUS
+import datetime
 
 
 class UserMixin(object):
@@ -55,6 +56,12 @@ class MeetingMixin(object):
             queryset = queryset.filter(meeting_type=type_id)
         if self.gender is not None:
             queryset = queryset.filter(owner__gender=self.gender)
+        if self.age_from is not None and self.age_to is not None:
+            birth_date_from = datetime.date.today() - datetime.timedelta(days=(self.age_to*365))
+            birth_date_to = datetime.date.today() - datetime.timedelta(days=(self.age_from*365))
+            queryset = queryset.filter(owner__birth_date__range=[
+                birth_date_from, birth_date_to
+            ])
         return queryset
 
 
