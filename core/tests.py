@@ -13,7 +13,7 @@ from django.contrib.gis.geos import Point
 import json
 import copy
 from core.constants import MAX_MEETINGS,\
-    MINE, APPROVED, DISAPPROVED, MALE, FEMALE
+    MINE, APPROVED, DISAPPROVED, MALE, FEMALE, MEETING_CATEGORIES
 
 from core.models import UserPhotos
 
@@ -271,7 +271,7 @@ class MeetingTests(MeetingMixin, TestCase):
         #                date=None, date_create=None, group_type=0, meeting_type=None
         for i in range(0, 3):
             response = self.create_meeting(i, i, "title" + str(i), client1,
-                                           None, None, 0, 1)
+                                           None, None, PAIR_MEETING, MEETING_CATEGORIES['sport'][0])
             self.assertEqual(response.data['meeting_type'], 1)
         test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}&type={3}"
         response = self.client.get(test_url.format(1, 1, 2000000000, 'sport'))
@@ -299,7 +299,7 @@ class MeetingTests(MeetingMixin, TestCase):
         client2 = client_creation("ivan", "qwerty")
         for i in range(0, 3):
             response = self.create_meeting(i, i, "title" + str(i), client1,
-                                           None, None, 0, 1)
+                                           None, None, PAIR_MEETING, MEETING_CATEGORIES['sport'][0])
         response = self.create_meeting(5, 5, "title" + str(5),
                                        client2, None, None, 0, 1)
         test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}" \
