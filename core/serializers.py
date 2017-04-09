@@ -60,7 +60,6 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create(username=validated_data['username'])
         user.set_password(validated_data['password'])
-        user.set_first_name(validated_data['first_name'])
         user.save()
 
         return user
