@@ -4,6 +4,7 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase, TransactionTestCase
 from django.test import Client
 from django.utils import timezone
+import datetime
 
 from chat.models import Confirm
 from core.models import User, Meeting, SocialData
@@ -37,8 +38,10 @@ PAIR_MEETING = 0
 GROUP_MEETING = 1
 
 
-def client_creation(username, password):
-    test_user = User.objects.create(username=username)
+def client_creation(username, password,
+                    birth_date=datetime.date(2000, 1, 1), gender=1):
+    test_user = User.objects.\
+        create(username=username, birth_date=birth_date, gender=gender)
     test_user.set_password(password)
     test_user.save()
     token, _ = Token.objects.get_or_create(user=test_user)

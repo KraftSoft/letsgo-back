@@ -11,6 +11,8 @@ class User(AbstractUser):
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = tuple()
+    birth_date = models.DateField(null=True, blank=False)
+    gender = models.SmallIntegerField(null=True, blank=False)
 
     def get_avatar(self):
 
