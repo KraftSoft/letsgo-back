@@ -32,10 +32,8 @@ class MeetingMixin(object):
         if self.meeting_type is not None:
             type_id = MEETING_CATEGORIES.get(self.meeting_type)[0]
             add = " and meeting_type={0}".format(type_id)
-            query = query + add
-            check = list(Meeting.objects.filter())
-            kek = 1
-        return Meeting.objects.raw(query + ";")
+            query += add
+        return Meeting.objects.raw(query)
 
 
 class PhotoMixin(object):
