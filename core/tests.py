@@ -460,6 +460,11 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
         response = self.client.post(reverse('meeting-confirm', kwargs={'pk': self.test_meeting_1.id}))
         self.assertEqual(response.data['status'], 400)
 
+    def test_count_confirms(self):
+        resp = self.meeting_creator.get(reverse('unread-confirms'))
+        data = json.loads(resp.data['data'])
+        self.assertEqual(data['unread'], 2)
+
 
 class MeetingTypesTest(ConfirmMixin, TestCase):
     def setUp(self):

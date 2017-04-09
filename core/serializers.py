@@ -85,7 +85,7 @@ class UserPhotoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserPhotos
-        fields = ('photo', 'delete_photo', 'set_avatar' )
+        fields = ('photo', 'delete_photo', 'set_avatar')
 
 
 class PhotoSerializer(serializers.ModelSerializer):
