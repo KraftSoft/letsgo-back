@@ -21,7 +21,7 @@ from rest_framework.views import APIView
 
 from chat.models import Confirm
 from core.constants import BASE_ERROR_MSG, MAX_MEETINGS,\
-    MOSCOW_LAT, MOSCOW_LNG, MAX_RADIUS, MEETING_CATEGORIES
+    MOSCOW_LAT, MOSCOW_LNG, MAX_RADIUS, MEETING_CATEGORIES, MALE, FEMALE
 
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin, ConfirmBasicMixin
@@ -86,8 +86,15 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
         except:
             self.age_from = None
             self.age_to = None
+        try:
+            self.gender = int(request.GET.get('gender'))
+            if self.gender != MALE and self.gender != FEMALE:
+                self.gender = None
+        except:
+            self.gender = None
         self.meeting_type = request.GET.get('type')
-        self.gender = request.GET.get('gender', None)
+        if self.meeting_type not in MEETING_CATEGORIES:
+            self.meeting_type = None
         return super().get(request, *args, **kwargs)
 
 

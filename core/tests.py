@@ -239,7 +239,6 @@ class MeetingTests(MeetingMixin, TestCase):
         self.assertEqual(len(data), 1)
         response = self.client.get(test_url.format(lng=2.2, lat=2.2, r=200))
         data = response.data
-        users = list(User.objects.all())
         self.assertEqual(len(data), 3)
         response = self.client.get(test_url.format(lng=2.2, lat=2.2, r=10000000000000))
         data = response.data
@@ -273,7 +272,6 @@ class MeetingTests(MeetingMixin, TestCase):
             response = self.create_meeting(i, i, "title" + str(i), client1,
                                            None, None, 0, 1)
             self.assertEqual(response.data['meeting_type'], 1)
-        check = list(Meeting.objects.all())
         test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}&type={3}"
         response = self.client.get(test_url.format(1, 1, 2000000000, 'sport'))
         data = response.data
@@ -431,7 +429,7 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
         fields = ('id', 'title', 'description', 'owner', 'subway', 'group_type')
         fst_meeting = creator_confirmations_r.data[0]['meeting']
         snd_meeting = creator_confirmations_r.data[1]['meeting']
-        confims_frombase = list(Confirm.objects.all().filter(meeting__owner__username='creator'))
+        confims_frombase = Confirm.objects.all().filter(meeting__owner__username='creator')
         for item in confims_frombase:
             self.assertTrue(item.is_read)
         check_json(fst_meeting, fields)
@@ -440,7 +438,7 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
         self.assertEqual(snd_meeting['color_status'], MINE)
 
     def test_proper_color_serialization(self):
-        confirmed_conf = list(Confirm.objects.all().filter(user__username='fst_successor'))
+        confirmed_conf = Confirm.objects.all().filter(user__username='fst_successor')
         response = self.meeting_creator.put(
             reverse('confirm-action', kwargs={'pk': confirmed_conf[0].id}),
             json.dumps({
@@ -449,10 +447,10 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
             }),
             content_type='application/json',
         )
-        all_confs = list(Confirm.objects.all().filter(
-            user__username='fst_successor', meeting=confirmed_conf[0].meeting, is_approved=True))
+        all_confs = Confirm.objects.all().filter(
+            user__username='fst_successor', meeting=confirmed_conf[0].meeting, is_approved=True)
         meetings = self.fst_successor.get(reverse('meetings-list') + "?lng={0}&lat={1}&r={2}".format(1, 1, 10))
-        all_meetings = list(Meeting.objects.all())
+        all_meetings = Meeting.objects.all()
         data = meetings.data
         self.assertEqual(data[0]['color_status'], APPROVED)
         meetings = self.snd_successor.get(reverse('meetings-list') + "?lng={0}&lat={1}&r={2}".format(1, 1, 10))
@@ -540,7 +538,7 @@ class UploadDeletePhotoTest(AuthUserMixin, TestCase):
     def test_delete(self):
         file_name = 'kek.jpeg'
         self.create_photo(file_name)
-        photos = list(UserPhotos.objects.all())
+        photos = UserPhotos.objects.all()
         kek_id = photos[0].id
         response = self.client.delete(reverse('delete-photo', kwargs={'pk': kek_id}))
         data = response.data
