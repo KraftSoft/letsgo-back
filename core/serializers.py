@@ -7,7 +7,9 @@ from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.settings import api_settings
 from django.core.urlresolvers import reverse
-
+from core.constants import MINE, APPROVED, DISAPPROVED
+import requests
+import json
 
 from chat.models import Confirm
 from core.models import User, Meeting, UserPhotos, SocialData
@@ -46,7 +48,7 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'about', 'password', 'username', 'avatar', 'href')
+        fields = ('id', 'first_name', 'about', 'password', 'avatar', 'href')
 
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
@@ -172,7 +174,21 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     meeting_date = serializers.DateTimeField(required=True)
 
+    color_status = serializers.SerializerMethodField()
+
     group_type = serializers.IntegerField(required=True)
+
+    meeting_type = serializers.IntegerField(required=False)
+
+    def get_color_status(self, obj):
+        request_user = self.context['request'].user
+        if(request_user.id == obj.owner.id):
+            return (MINE)
+        check_confirm = Confirm.objects.filter(
+            user__id=request_user.id, meeting=obj, is_approved=True).exists()
+        if check_confirm:
+            return APPROVED
+        return DISAPPROVED
 
     def get_href(self, obj):
         return reverse_full('meeting-detail', kwargs={'pk': obj.id})
@@ -191,7 +207,8 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
             coordinates=validated_data['coordinates'],
             meeting_date=validated_data['meeting_date'],
             owner_id=user.id,
-            group_type=validated_data['group_type']
+            group_type=validated_data['group_type'],
+            meeting_type=validated_data.get('meeting_type', 0)
         )
         meeting.save()
 
@@ -199,8 +216,8 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ('id', 'title', 'meeting_date', 'description', 'group_type',
-                  'owner', 'coordinates', 'subway', 'href', 'confirms')
+        fields = ('id', 'title', 'meeting_date', 'description', 'group_type', 'meeting_type',
+                  'owner', 'coordinates', 'subway', 'href', 'confirms', 'color_status')
 
 
 class JsonResponseSerializer(serializers.Serializer):

@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
 from core.views import UserList, UserDetail, MeetingsList, MeetingDetail, AuthView, FileUploadView, SetAvatar, \
-    ConfirmCreate, ConfirmsList, AcceptConfirm, DeletePhoto
+    ConfirmCreate, ConfirmsList, AcceptConfirm, DeletePhoto, MeetingTypes
 
 urlpatterns = [
 
@@ -28,5 +28,8 @@ urlpatterns = [
 
     url(r'^confirm-action/(?P<pk>\d+)/$', AcceptConfirm.as_view(), name='confirm-action'),
 
+    url(r'^meeting-types/$', MeetingTypes.as_view(), name='meeting-types'),
+
 
 ]
+

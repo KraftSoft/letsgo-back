@@ -6,6 +6,7 @@ import magic
 from django.core.files.storage import default_storage
 from django.db import DatabaseError
 from django.utils.timezone import datetime
+import json
 
 from rest_framework import generics
 from rest_framework.authtoken.models import Token
@@ -18,7 +19,8 @@ from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from chat.models import Confirm
-from core.constants import BASE_ERROR_MSG, MAX_MEETINGS, MOSCOW_LAT, MOSCOW_LNG, MOSCKOW_R
+from core.constants import BASE_ERROR_MSG, MAX_MEETINGS,\
+    MOSCOW_LAT, MOSCOW_LNG, MOSCKOW_R, MEETING_CATEGORIES
 
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin, ConfirmBasicMixin
@@ -73,6 +75,7 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
             self.lat = MOSCOW_LAT
             self.lng = MOSCOW_LNG
             self.r = MOSCKOW_R
+        self.meeting_type = request.GET.get('type', None)
         return super().get(request, *args, **kwargs)
 
 
@@ -198,11 +201,8 @@ class DeletePhoto(GeneralPermissionMixin, PhotoMixin, DestroyAPIView):
 
 class SetAvatar(GeneralPermissionMixin, PhotoMixin, UpdateAPIView):
     def put(self, request, *args, **kwargs):
-
         obj_pk = kwargs['pk']
-
         try:
-
             UserPhotos.objects.filter(owner=self.request.user, is_avatar=True).update(is_avatar=False)
 
             obj = UserPhotos.objects.get(pk=obj_pk, owner=self.request.user)
@@ -252,3 +252,12 @@ class ConfirmsList(GeneralPermissionMixin, ConfirmMixin, ListAPIView):
 
 class AcceptConfirm(GeneralPermissionMixin, ConfirmBasicMixin, UpdateAPIView):
     pass
+
+
+class MeetingTypes(GeneralPermissionMixin, ListAPIView):
+    def get(self, request, *args, **kwargs):
+        answer = []
+        for k, v in MEETING_CATEGORIES.items():
+            answer.append((k, v[0]))
+        json_data = json.dumps(answer)
+        return Response(JRS(JsonResponse(status=200, msg='ok', data=json_data)).data)
