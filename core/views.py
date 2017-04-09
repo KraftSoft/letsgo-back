@@ -83,7 +83,7 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
         try:
             self.age_from = int(request.GET.get('age_from'))
             self.age_to = int(request.GET.get('age_to'))
-        except:
+        except (ValueError, TypeError):
             self.age_from = None
             self.age_to = None
         try:
