@@ -1,6 +1,6 @@
 import logging
 import operator
-
+from core.models import User
 from rest_framework.permissions import BasePermission, IsAdminUser, IsAuthenticated
 
 logger = logging.getLogger(__name__)
@@ -10,15 +10,6 @@ class IsStaff(BasePermission):
     def has_permission(self, request, view):
         if request.user.is_staff:
             return True
-
-
-class IsStaffOrTargetUser(IsStaff):
-    def has_permission(self, request, view):
-
-        if request.user.pk == view.kwargs.get('pk'):
-            return True
-
-        return super().has_permission(request, view)
 
 
 class IsStaffOrOwner(BasePermission):
@@ -45,14 +36,6 @@ class IsStaffOrOwner(BasePermission):
         if request.user.pk == owner.pk:
             return True
 
-        return super().has_permission(request, view)
-
-
-class IsStaffOrMe(BasePermission):
-    def has_permission(self, request, view):
-        me = view.model
-        if request.user.pk == me.pk:
-            return True
         return super().has_permission(request, view)
 
 

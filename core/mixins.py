@@ -1,6 +1,6 @@
 from chat.models import Confirm
 from core.models import User, Meeting, UserPhotos, SocialData
-from core.permissions import IsStaffOrMe, IsStaffOrOwner
+from core.permissions import IsStaffOrOwner
 from core.serializers import UserSerializerExtended, MeetingSerializer, PhotoSerializer, \
     ConfirmSerializer, ConfirmExtendedSerializer, SocialSerializer
 from core.constants import MEETING_CATEGORIES, MAX_RADIUS
@@ -11,7 +11,8 @@ class UserMixin(object):
     model = User
     serializer_class = UserSerializerExtended
     queryset = User.objects.all()
-    who_can_update = IsStaffOrMe
+    who_can_update = IsStaffOrOwner
+    owner_path = 'pk'
 
     def get_object(self):
         pk = self.kwargs.get('pk', None)

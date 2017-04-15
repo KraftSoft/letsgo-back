@@ -342,6 +342,23 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
         self.assertEqual(response.data['first_name'], NEW_FN)
         self.assertEqual(response.data['about'], NEW_ABOUT)
 
+    def test_update_another(self):
+        NEW_ABOUT = 'bla bla bla'
+        NEW_FN = 'Юля'
+        who_trying_to_update = client_creation("kek", "lol")
+
+        response = who_trying_to_update.put(
+            reverse('user-detail', kwargs={'pk': self.test_user.pk}),
+            json.dumps({
+                'about': NEW_ABOUT,
+                'first_name': NEW_FN,
+                'gender': FEMALE,
+                'birth_date': DEFAULT_BIRTH_DATE.isoformat()
+            }),
+            content_type='application/json',
+        )
+        self.assertEqual(response.status_code, 403)
+
     def test_update_meeting(self):
         response = self.client.put(
             reverse('meeting-detail', kwargs={'pk': self.test_meeting_1.pk}),

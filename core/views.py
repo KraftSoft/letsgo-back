@@ -48,6 +48,11 @@ class UserList(UserMixin, generics.ListCreateAPIView):
 
 
 class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestroyAPIView):
+        def dispatch(self, request, *args, **kwargs):
+            if 'pk' not in self.kwargs:
+                self.kwargs['pk'] = request.user.pk
+            return super().dispatch(request, *args, **kwargs)
+
         def get(self, request, *args, **kwargs):
             try:
                 return self.retrieve(request, *args, **kwargs)
