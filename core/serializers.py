@@ -218,6 +218,15 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
                   'owner', 'coordinates', 'subway', 'href', 'confirms', 'color_status')
 
 
+class MeetingCropedserializer(MeetingSerializer):
+    confirms = None
+
+    class Meta:
+        model = Meeting
+        fields = ('id', 'title', 'meeting_date', 'description', 'group_type', 'meeting_type',
+                  'owner', 'coordinates', 'subway', 'href', 'color_status')
+
+
 class JsonResponseSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
@@ -232,7 +241,7 @@ class JsonResponseSerializer(serializers.Serializer):
 
 
 class ConfirmExtendedSerializer(ConfirmSerializer):
-    meeting = MeetingSerializer(required=False)
+    meeting = MeetingCropedserializer(required=False)
 
     class Meta:
         model = Confirm
