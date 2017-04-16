@@ -81,6 +81,8 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
             self.lat = float(request.GET.get('lat'))
             self.lng = float(request.GET.get('lng'))
             self.r = float(request.GET.get('r'))
+            if self.r > MAX_RADIUS:
+                self.r = MAX_RADIUS
         except (ValueError, TypeError):
             self.lat = MOSCOW_LAT
             self.lng = MOSCOW_LNG

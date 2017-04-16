@@ -43,7 +43,7 @@ class MeetingMixin(object):
         if self.lat is None or self.lng is None or self.r is None:
             return Meeting.objects.all()
 
-        radius = self.r * 1000 if self.r > MAX_RADIUS else MAX_RADIUS
+        radius = self.r * 1000
         queryset = Meeting.objects.all().extra(
             where=[
                 'ST_Distance_Sphere(coordinates, ST_MakePoint({lat},{lng})) <=  {r}'.format(
