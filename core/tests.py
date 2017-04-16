@@ -132,6 +132,15 @@ class ConfirmMixin(MeetingMixin):
     def setUp(self):
         super().setUp()
         self.test_confirm = Confirm.objects.create(meeting=self.test_meeting_1, user=self.test_user)
+        self.test_confirm_1 = Confirm.objects.create(meeting=self.test_meeting_2, user=self.test_user)
+
+        self.meeting_creator = client_creation('creator', 'lol')
+        self.meeting_id = self.create_meeting(1, 1, 'keklol', self.meeting_creator).data['id']
+        self.fst_successor = client_creation('fst_successor', 'lol')
+        self.snd_successor = client_creation('snd_successor', 'lol')
+        # 1st and 2nd clients trying to participate
+        self.fst_successor.post(reverse('meeting-confirm', kwargs={'pk': self.meeting_id}))
+        self.snd_successor.post(reverse('meeting-confirm', kwargs={'pk': self.meeting_id}))
 
 
 class CreateUserTests(TestCase):
@@ -404,15 +413,6 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
 
 
 class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
-    def setUp(self):
-        super().setUp()
-        self.meeting_creator = client_creation('creator', 'lol')
-        self.meeting_id = self.create_meeting(1, 1, 'keklol', self.meeting_creator).data['id']
-        self.fst_successor = client_creation('fst_successor', 'lol')
-        self.snd_successor = client_creation('snd_successor', 'lol')
-        # 1st and 2nd clients trying to participate
-        self.fst_successor.post(reverse('meeting-confirm', kwargs={'pk': self.meeting_id}))
-        self.snd_successor.post(reverse('meeting-confirm', kwargs={'pk': self.meeting_id}))
 
     def test_list_confirms(self):
         creator_confirmations_r = self.meeting_creator.get(reverse('confirms-list'))
@@ -429,7 +429,7 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
 
     def test_proper_color_serialization(self):
         confirmed_conf = Confirm.objects.all().filter(user__username='fst_successor')
-        response = self.meeting_creator.put(
+        self.meeting_creator.put(
             reverse('confirm-action', kwargs={'pk': confirmed_conf[0].id}),
             json.dumps({
                 'is_approved': True,
@@ -437,12 +437,12 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
             }),
             content_type='application/json',
         )
-        all_confs = Confirm.objects.all().filter(
+        Confirm.objects.all().filter(
             user__username='fst_successor', meeting=confirmed_conf[0].meeting, is_approved=True)
         meetings = self.fst_successor.get(reverse('meetings-list') + "?lng={0}&lat={1}&r={2}".format(1, 1, 10))
-        all_meetings = Meeting.objects.all()
         data = meetings.data
         self.assertEqual(data[0]['color_status'], APPROVED)
+
         meetings = self.snd_successor.get(reverse('meetings-list') + "?lng={0}&lat={1}&r={2}".format(1, 1, 10))
         data = meetings.data
         self.assertEqual(data[0]['color_status'], DISAPPROVED)
