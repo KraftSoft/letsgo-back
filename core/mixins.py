@@ -36,7 +36,7 @@ class MeetingMixin(object):
     lng = None
     r = None
 
-    meeting_type = None
+    category = None
 
     def get_queryset(self):
 
@@ -53,9 +53,9 @@ class MeetingMixin(object):
                 )
             ]
         )
-        if self.meeting_type is not None:
-            type_id = MEETING_CATEGORIES.get(self.meeting_type)[0]
-            queryset = queryset.filter(meeting_type=type_id)
+        if self.category is not None:
+            type_id = MEETING_CATEGORIES.get(self.category)[0]
+            queryset = queryset.filter(category=type_id)
         if self.gender is not None:
             queryset = queryset.filter(owner__gender=self.gender)
         if self.age_from is not None and self.age_to is not None:

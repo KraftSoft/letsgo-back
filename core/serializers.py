@@ -176,7 +176,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     group_type = serializers.IntegerField(required=True)
 
-    meeting_type = serializers.IntegerField(required=False)
+    category = serializers.IntegerField(required=False)
 
     def get_color_status(self, obj):
         request_user = self.context['request'].user
@@ -206,7 +206,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
             meeting_date=validated_data['meeting_date'],
             owner_id=user.id,
             group_type=validated_data['group_type'],
-            meeting_type=validated_data.get('meeting_type', 0)
+            category=validated_data.get('category', 0)
         )
         meeting.save()
 
@@ -214,7 +214,7 @@ class MeetingSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
     class Meta:
         model = Meeting
-        fields = ('id', 'title', 'meeting_date', 'description', 'group_type', 'meeting_type',
+        fields = ('id', 'title', 'meeting_date', 'description', 'group_type', 'category',
                   'owner', 'coordinates', 'subway', 'href', 'confirms', 'color_status')
 
 
@@ -223,7 +223,7 @@ class MeetingCropedserializer(MeetingSerializer):
 
     class Meta:
         model = Meeting
-        fields = ('id', 'title', 'meeting_date', 'description', 'group_type', 'meeting_type',
+        fields = ('id', 'title', 'meeting_date', 'description', 'group_type', 'category',
                   'owner', 'coordinates', 'subway', 'href', 'color_status')
 
 

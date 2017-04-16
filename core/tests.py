@@ -1,4 +1,6 @@
 import os
+import urllib.parse
+
 from PIL import Image
 from django.core.urlresolvers import reverse
 from django.test import TestCase, TransactionTestCase
@@ -13,7 +15,8 @@ from django.contrib.gis.geos import Point
 import json
 import copy
 from core.constants import MAX_MEETINGS,\
-    MINE, APPROVED, DISAPPROVED, MALE, FEMALE, MEETING_CATEGORIES
+    MINE, APPROVED, DISAPPROVED, MALE, FEMALE, MEETING_CATEGORIES, MAX_RADIUS, MOSCOW_LAT, MOSCOW_LNG, PITER_LAT, \
+    PITER_LNG
 
 from core.models import UserPhotos
 
@@ -100,32 +103,56 @@ class MeetingMixin(AuthUserMixin):
             group_type=GROUP_MEETING
         )
 
-    def create_meeting(self, lat, lng, title, creator=None,
-                       date=None, date_create=None, group_type=PAIR_MEETING, meeting_type=None):
+    def create_meeting(
+            self,
+            lat,
+            lng,
+            title,
+            creator=None,
+            date=None,
+            date_create=None,
+            group_type=PAIR_MEETING,
+            category=None
+    ):
+
         desc = title + "desk"
         coords = {
             'lat': lat,
             'lng': lng
         }
+
         if date is None:
             date = timezone.now().date().isoformat()
+
         if date_create is None:
-            request_dict = {'title': title, 'description': desc,
-                            'group_type': group_type, 'coordinates': coords,
-                            'meeting_date': date}
+            request_dict = {
+                'title': title,
+                'description': desc,
+                'group_type': group_type,
+                'coordinates': coords,
+                'meeting_date': date
+            }
+
         else:
-            request_dict = {'title': title, 'description': desc,
-                            'date_create': date_create, 'group_type': group_type,
-                            'coordinates': coords, 'meeting_date': date}
-        if meeting_type is not None:
-            request_dict['meeting_type'] = meeting_type
+            request_dict = {
+                'title': title,
+                'description': desc,
+                'date_create': date_create,
+                'group_type': group_type,
+                'coordinates': coords,
+                'meeting_date': date
+            }
+
+        if category is not None:
+            request_dict['category'] = category
         request_data = json.dumps(request_dict)
+
         if creator is not None:
             response = creator.post(reverse('meetings-list'), request_data, content_type='application/json')
             return response
-        else:
-            response = self.client.post(reverse('meetings-list'), request_data, content_type='application/json')
-            return response
+
+        response = self.client.post(reverse('meetings-list'), request_data, content_type='application/json')
+        return response
 
 
 class ConfirmMixin(MeetingMixin):
@@ -221,27 +248,46 @@ class MeetingTests(MeetingMixin, TestCase):
         title = 'test meeting title'
         response = self.create_meeting(43.588348, 39.729996, title, self.client)
         fields = ('id', 'title', 'description', 'owner', 'subway',
-                  'coordinates', 'meeting_date', 'group_type', 'meeting_type')
+                  'coordinates', 'meeting_date', 'group_type', 'category')
         data = response.data
         check_json(data, fields)
 
     def test_meeting_get_inradius(self):
+
         client1 = client_creation("vasyan", "qwerty")
         client2 = client_creation("petyan", "qwerty")
-        for i in range(0, 3):
-            response = self.create_meeting(i, i, "title" + str(i), client1)
-        for i in range(3, 6):
-            response = self.create_meeting(i, i, "title" + str(i), client2)
+
+        for i in range(2):
+            self.create_meeting(
+                lat=MOSCOW_LAT,
+                lng=MOSCOW_LNG,
+                title="title" + str(i),
+                creator=client1 if i % 2 == 0 else client2
+            )
+
+        for i in range(4):
+            self.create_meeting(
+                lat=PITER_LAT,
+                lng=PITER_LNG,
+                title="title" + str(i),
+                creator=client2 if i % 2 == 0 else client1
+            )
+
         test_url = reverse('meetings-list') + "?lng={lng}&lat={lat}&r={r}"
-        response = self.client.get(test_url.format(lng=2, lat=2, r=1))
+
+        response = self.client.get(test_url.format(lat=MOSCOW_LAT, lng=MOSCOW_LNG, r=MAX_RADIUS))
         data = response.data
-        self.assertEqual(len(data), 1)
-        response = self.client.get(test_url.format(lng=2.2, lat=2.2, r=200))
+
+        for item in data:
+            self.assertEqual(item['coordinates']['lat'], MOSCOW_LAT)
+            self.assertEqual(item['coordinates']['lng'], MOSCOW_LNG)
+
+        response = self.client.get(test_url.format(lat=PITER_LAT, lng=PITER_LNG, r=MAX_RADIUS))
         data = response.data
-        self.assertEqual(len(data), 3)
-        response = self.client.get(test_url.format(lng=2.2, lat=2.2, r=10000000000000))
-        data = response.data
-        self.assertEqual(len(data), 8)
+
+        for item in data:
+            self.assertEqual(item['coordinates']['lat'], PITER_LAT)
+            self.assertEqual(item['coordinates']['lng'], PITER_LNG)
 
     def test_4_meeting_add(self):
         client1 = client_creation("vasyan", "qwerty")
@@ -263,46 +309,108 @@ class MeetingTests(MeetingMixin, TestCase):
         data_all = response_all.data
         self.assertEqual(len(data), len(data_all))
 
-    def test_meeting_type_filter(self):
+    def test_category_filter(self):
         client1 = client_creation("vasyan", "qwerty")
-        # self, lat, lng, title, creator=None,
-        #                date=None, date_create=None, group_type=0, meeting_type=None
-        for i in range(0, 3):
-            response = self.create_meeting(i, i, "title" + str(i), client1,
-                                           None, None, PAIR_MEETING, MEETING_CATEGORIES['sport'][0])
-            self.assertEqual(response.data['meeting_type'], 1)
-        test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}&type={3}"
-        response = self.client.get(test_url.format(1, 1, 2000000000, 'sport'))
+        client2 = client_creation("petya", "qwerty")
+
+        for i in range(0, 4):
+            self.create_meeting(
+                lat=1,
+                lng=1,
+                title="title" + str(i),
+                creator=client1 if i % 2 == 0 else client2,
+                date=None,
+                date_create=None,
+                group_type=PAIR_MEETING,
+                category=MEETING_CATEGORIES['sport'][0]
+            )
+
+        self.create_meeting(
+            lat=1,
+            lng=1,
+            title="title",
+            creator=client1,
+            date=None,
+            date_create=None,
+            group_type=PAIR_MEETING,
+            category=MEETING_CATEGORIES['bar'][0]
+        )
+
+        test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}&category={3}"
+
+        response = self.client.get(test_url.format(1, 1, MAX_RADIUS, 'sport'))
         data = response.data
-        self.assertEqual(len(data), 3)
+        self.assertEqual(len(data), 4)
+
         test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}"
-        response = self.client.get(test_url.format(1, 1, 2000000000))
+
+        response = self.client.get(test_url.format(1, 1, MAX_RADIUS))
         data = response.data
         self.assertEqual(len(data), 5)
 
     def test_gender_filter(self):
-        client1 = client_creation("vasyan", "qwerty")
-        client2 = client_creation("ivan", "qwerty")
-        for i in range(0, 3):
-            response = self.create_meeting(i, i, "title" + str(i), client1,
-                                           None, None, 0, 1)
-        response = self.create_meeting(5, 5, "title" + str(5),
-                                       client2, None, None, 0, 1)
+
+        client1 = client_creation("vasyan", "qwerty", gender=MALE)
+        client2 = client_creation("lena", "qwerty", gender=FEMALE)
+
+        for i in range(6):
+            self.create_meeting(
+                lat=1,
+                lng=1,
+                title="title" + str(i),
+                creator=client1 if i % 2 == 0 else client2,
+                date=None,
+                date_create=None,
+                group_type=PAIR_MEETING,
+                category=MEETING_CATEGORIES['sport'][0]
+            )
+
         test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}&gender={3}"
-        meet_r = self.client.get(test_url.format(1, 1, 2000000000, MALE))
-        self.assertEqual(len(meet_r.data), 4)
+        meet_with_boys = self.client.get(test_url.format(1, 1, MAX_RADIUS, MALE))
+        self.assertEqual(len(meet_with_boys.data), 3)
+
+        test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}&gender={3}"
+        meet_with_girls = self.client.get(test_url.format(1, 1, MAX_RADIUS, FEMALE))
+        self.assertEqual(len(meet_with_girls.data), 3)
 
     def test_age_filter(self):
+
         client1 = client_creation("vasyan", "qwerty", datetime.date(2005, 1, 1))
         client2 = client_creation("ivan", "qwerty")
+
         for i in range(0, 3):
-            response = self.create_meeting(i, i, "title" + str(i), client1,
-                                           None, None, PAIR_MEETING, MEETING_CATEGORIES['sport'][0])
-        response = self.create_meeting(5, 5, "title" + str(5),
-                                       client2, None, None, 0, 1)
-        test_url = reverse('meetings-list') + "?lng={0}&lat={1}&r={2}" \
-                                              "&gender={3}&age_from={4}&age_to={5}"
-        meet_r = self.client.get(test_url.format(1, 1, 2000000000, MALE, 0, 14))
+            self.create_meeting(
+                lat=1,
+                lng=1,
+                title="title" + str(i),
+                creator=client1,
+                date=None,
+                date_create=None,
+                group_type=PAIR_MEETING,
+                category=MEETING_CATEGORIES['sport'][0]
+            )
+
+        self.create_meeting(
+            lat=5,
+            lng=5,
+            title="title" + str(5),
+            creator=client2,
+            date=None,
+            date_create=None,
+            group_type=PAIR_MEETING,
+            category=MEETING_CATEGORIES['sport'][0]
+        )
+
+        test_url = '{0}?{1}'.format(reverse('meetings-list'), urllib.parse.urlencode({
+            'lng': 1,
+            'lat': 1,
+            'r': MAX_RADIUS,
+            'gender': MALE,
+            'age_from': 0,
+            'age_to': 14
+        }))
+
+        meet_r = self.client.get(test_url)
         self.assertEqual(len(meet_r.data), 3)
 
 
@@ -454,10 +562,10 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
             }),
             content_type='application/json',
         )
-        all_confs = Confirm.objects.all().filter(
+        Confirm.objects.all().filter(
             user__username='fst_successor', meeting=confirmed_conf[0].meeting, is_approved=True)
         meetings = self.fst_successor.get(reverse('meetings-list') + "?lng={0}&lat={1}&r={2}".format(1, 1, 10))
-        all_meetings = Meeting.objects.all()
+
         data = meetings.data
         self.assertEqual(data[0]['color_status'], APPROVED)
         meetings = self.snd_successor.get(reverse('meetings-list') + "?lng={0}&lat={1}&r={2}".format(1, 1, 10))
