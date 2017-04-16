@@ -12,7 +12,7 @@ class UserMixin(object):
     serializer_class = UserSerializerExtended
     queryset = User.objects.all()
     who_can_update = IsStaffOrOwner
-    owner_path = 'pk'
+    path_to_owner_pk = 'pk'
 
     def get_object(self):
         pk = self.kwargs.get('pk', None)
@@ -30,6 +30,7 @@ class MeetingMixin(object):
     serializer_class = MeetingSerializer
     who_can_update = IsStaffOrOwner
     queryset = Meeting.objects.all()
+    path_to_owner_pk = 'owner.pk'
 
     lat = None
     lng = None
@@ -70,6 +71,7 @@ class PhotoMixin(object):
     model = UserPhotos
     serializer_class = PhotoSerializer
     who_can_update = IsStaffOrOwner
+    path_to_owner_pk = 'owner.pk'
 
     def get_queryset(self):
         return UserPhotos.objects.all()
@@ -80,7 +82,7 @@ class ConfirmMixin(object):
     queryset = Confirm.objects.all()
     serializer_class = ConfirmExtendedSerializer
     who_can_update = IsStaffOrOwner
-    owner_path = 'meeting.owner'
+    path_to_owner_pk = 'meeting.owner.pk'
 
 
 class ConfirmBasicMixin(ConfirmMixin):
