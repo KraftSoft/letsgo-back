@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
         context = {
             'project_name': 'letsgo',
-            'project_version': '1.0-8'
+            'project_version': '1.0-9'
         }
 
         postinst_tpl = 'debian/postinst.tpl'
