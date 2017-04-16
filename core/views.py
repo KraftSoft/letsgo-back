@@ -48,6 +48,11 @@ class UserList(UserMixin, generics.ListCreateAPIView):
 
 
 class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestroyAPIView):
+        def dispatch(self, request, *args, **kwargs):
+            if 'pk' not in self.kwargs:
+                self.kwargs['pk'] = request.user.pk
+            return super().dispatch(request, *args, **kwargs)
+
         def get(self, request, *args, **kwargs):
             try:
                 return self.retrieve(request, *args, **kwargs)
@@ -57,6 +62,20 @@ class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestr
 
 
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
+
+    def __init__(self):
+        super().__init__()
+        self.lat = None
+        self.lng = None
+        self.r = None
+
+        self.age_from = None
+        self.age_to = None
+
+        self.gender = None
+
+        self.category = None
+
     def post(self, request, *args, **kwargs):
         user = request.user
         date_create = datetime.today()
@@ -78,25 +97,28 @@ class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIV
             self.r = float(request.GET.get('r'))
             if self.r > MAX_RADIUS:
                 self.r = MAX_RADIUS
-        except (ValueError, TypeError):
+        except ValueError:
             self.lat = MOSCOW_LAT
             self.lng = MOSCOW_LNG
             self.r = MAX_RADIUS
+        except TypeError:
+            pass
+
         try:
             self.age_from = int(request.GET.get('age_from'))
             self.age_to = int(request.GET.get('age_to'))
         except (ValueError, TypeError):
-            self.age_from = None
-            self.age_to = None
+            pass
+
         try:
             self.gender = int(request.GET.get('gender'))
             if self.gender not in (MALE, FEMALE):
                 self.gender = None
-        except:
-            self.gender = None
-        self.meeting_type = request.GET.get('type')
-        if self.meeting_type not in MEETING_CATEGORIES:
-            self.meeting_type = None
+        except (ValueError, TypeError):
+            pass
+
+        category = request.GET.get('category')
+        self.category = category if category in MEETING_CATEGORIES else None
         return super().get(request, *args, **kwargs)
 
 
