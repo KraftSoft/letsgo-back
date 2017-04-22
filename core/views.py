@@ -20,7 +20,7 @@ from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from chat.models import Confirm
-from core.constants import BASE_ERROR_MSG, MAX_MEETINGS,\
+from core.constants import ALLOWABLE_FILE_FORMATS, BASE_ERROR_MSG, MAX_MEETINGS, \
     MOSCOW_LAT, MOSCOW_LNG, MAX_RADIUS, MEETING_CATEGORIES, MALE, FEMALE
 
 from core.exceptions import UploadException
@@ -161,6 +161,10 @@ class FileUploadView(APIView):
         if not re.match('image/', mime_type):
             raise UploadException(
                 response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
+        img_format = mime_type.split('/')[1]
+        if img_format not in ALLOWABLE_FILE_FORMATS:
+            raise UploadException(
+                response=JsonResponse(status=400, msg='error wrong img format: "{}"'.format(img_format)))
 
     def save_file(self, filename, file_obj):
 

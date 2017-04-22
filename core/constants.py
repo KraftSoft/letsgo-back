@@ -25,3 +25,7 @@ MEETING_CATEGORIES = {
     "dance": (3, u'танцы'),
 }
 
+ALLOWABLE_FILE_FORMATS = [
+    "png",
+    "jpeg"
+]

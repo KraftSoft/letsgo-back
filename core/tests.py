@@ -644,7 +644,7 @@ class UploadDeletePhotoTest(AuthUserMixin, TestCase):
         return response
 
     def test_upload__ok(self):
-        file_name = 'test.jpeg'
+        file_name = 'test.png.gif'
         response = self.create_photo(file_name)
         data = response.data
         self.assertEqual(data['status'], 204)
