@@ -1,7 +1,6 @@
 import logging
 import operator
-
-from rest_framework.permissions import BasePermission, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import BasePermission, IsAuthenticated
 
 logger = logging.getLogger(__name__)
 
@@ -12,15 +11,6 @@ class IsStaff(BasePermission):
             return True
 
 
-class IsStaffOrTargetUser(IsStaff):
-    def has_permission(self, request, view):
-
-        if request.user.pk == view.kwargs.get('pk'):
-            return True
-
-        return super().has_permission(request, view)
-
-
 class IsStaffOrOwner(BasePermission):
     def has_permission(self, request, view):
 
@@ -29,31 +19,24 @@ class IsStaffOrOwner(BasePermission):
 
         object_model = view.model
 
+        if request.user.is_superuser:
+            return True
+
         try:
             model = object_model.objects.get(pk=view.kwargs['pk'])
         except (object_model.DoesNotExist, KeyError):
             return False
 
-        path_to_owner = getattr(view, 'owner_path', 'owner')
-
         try:
-            owner = operator.attrgetter(path_to_owner)(model)
+            owner_pk = operator.attrgetter(view.path_to_owner_pk)(model)
         except AttributeError:
             logger.error('Wrong path tp owner')
             return False
 
-        if request.user.pk == owner.pk:
+        if request.user.pk == owner_pk:
             return True
 
-        return super().has_permission(request, view)
-
-
-class IsStaffOrMe(BasePermission):
-    def has_permission(self, request, view):
-        me = view.model
-        if request.user.pk == me.pk:
-            return True
-        return super().has_permission(request, view)
+        return False
 
 
 class GeneralPermissionMixin(object):
@@ -68,5 +51,7 @@ class GeneralPermissionMixin(object):
         elif self.request.method == 'POST':  # only authorized users can create objects
             return [IsAuthenticated()]
 
-        else:
+        elif self.request.method == 'PUT':
             return [self.who_can_update()]  # only owners can update objects
+        else:
+            return False
