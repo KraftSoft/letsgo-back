@@ -187,6 +187,8 @@ class FileUploadView(APIView):
         try:
             self.validate_request()
             file_obj = request.data['file']
+            # допилить
+            self.check_mime_type(file_obj)
 
             self.save_file(filename, file_obj)
 
@@ -316,5 +318,4 @@ class UnreadConfirms(GeneralPermissionMixin, ListAPIView):
     def get(self, request, *args, **kwargs):
         count = Confirm.objects.filter(meeting__owner=request.user, is_read=False).count()
         answer = {"unread": count}
-        json_data = json.dumps(answer)
-        return Response(JRS(JsonResponse(status=200, msg='ok', data=json_data)).data)
+        return Response(JRS(JsonResponse(status=200, msg='ok', data=answer)).data)

@@ -614,7 +614,7 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
 
     def test_count_confirms(self):
         resp = self.meeting_creator.get(reverse('unread-confirms'))
-        data = json.loads(resp.data['data'])
+        data = resp.data['data']
         self.assertEqual(data['unread'], 2)
 
 
