@@ -279,6 +279,10 @@ class ConfirmCreate(GeneralPermissionMixin, CreateAPIView):
         except Meeting.DoesNotExist:
             return Response(JRS(JsonResponse(status=404, msg='meeting does not exist')).data)
 
+        check_confirm = Confirm.objects.filter(meeting_id=meeting_pk, user=request.user).exists()
+        if check_confirm:
+            return Response(JRS(JsonResponse(status=400, msg='you cannot create more than one confirm')).data)
+
         if meeting.owner_id == request.user.id:
             return Response(JRS(JsonResponse(status=400, msg='you can not confirm to your event')).data)
 
