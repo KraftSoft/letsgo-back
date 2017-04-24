@@ -6,4 +6,4 @@ class ChatConfig(AppConfig):
     verbose_name = "Chat"
 
     def ready(self):
-        from chat.signals.handlers import add_to_chat #noqa
+        from chat.signals.handlers import add_to_chat  #noqa

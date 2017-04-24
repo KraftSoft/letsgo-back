@@ -31,4 +31,5 @@ class Message(models.Model):
     author = models.ForeignKey(User, related_name='messages')
     text = models.TextField()
     is_read = models.BooleanField(default=False)
-    date_create = models.DateTimeField(auto_now=True)
+    is_received = models.BooleanField(default=False)
+    date_create = models.DateTimeField(auto_now_add=True)

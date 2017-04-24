@@ -1,26 +1,33 @@
-from tornado import websocket
-from redis import StrictRedis
+import signal
+import time
 
-redis_client = StrictRedis(db=1)
+from django.core.management import BaseCommand
+from tornado.httpserver import HTTPServer
+from tornado.ioloop import IOLoop
 
-
-class ChatSocketHandler(websocket.WebSocketHandler):
-
-    waiters = set()
-
-    def open(self, *args, **kwargs):
-        self.channel = kwargs.get('channel', 'main')
-        self.waiters.add((self.channel, self))
+from chat.tornado import application
 
 
+class Command(BaseCommand):
+    def sig_handler(self, sig, frame):
+        """Catch signal and init callback"""
+        IOLoop.instance().add_callback(self.shutdown)
 
+    def shutdown(self):
+        """Stop server and add callback to stop i/o loop"""
+        self.http_server.stop()
 
+        io_loop = IOLoop.instance()
+        io_loop.add_timeout(time.time() + 2, io_loop.stop)
 
-    def on_message(self, message):
-        pass
+    def handle(self, *args, **options):
+        self.http_server = HTTPServer(application)
+        self.http_server.listen(8888, address="127.0.0.1")
 
-    def data_received(self, chunk):
-        pass
+        # Init signals handler
+        signal.signal(signal.SIGTERM, self.sig_handler)
 
+        # This will also catch KeyboardInterrupt exception
+        signal.signal(signal.SIGINT, self.sig_handler)
 
-
+        IOLoop.instance().start()
