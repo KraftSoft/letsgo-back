@@ -70,11 +70,11 @@ class UserPhotoSerializer(serializers.ModelSerializer):
     set_avatar = serializers.SerializerMethodField()
 
     def get_delete_photo(self, obj):
-        result = reverse('delete-photo', kwargs={'pk':obj.id})
+        result = reverse('delete-photo', kwargs={'pk': obj.id})
         return build_absolute_url(result)
 
     def get_set_avatar(self, obj):
-        result = reverse('set-avatar', kwargs={'pk':obj.id})
+        result = reverse('set-avatar', kwargs={'pk': obj.id})
         return build_absolute_url(result)
 
     def get_photo(self, obj):
