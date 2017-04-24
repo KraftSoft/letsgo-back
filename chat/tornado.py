@@ -42,29 +42,7 @@ class SubscribeManager(BaseSubscriber):
 publisher = SubscribeManager(tornadoredis.Client())
 
 
-class AuthMixin(object):
-    def get_user(self, token=None):
-
-        if not token:
-            header = self.request.headers.get('Authorization')
-            if not header:
-                return None
-
-            try:
-                token = header.split(' ')[1]
-            except IndexError:
-                logger.error('Invalid authorization header {0}'.format(header))
-                return None
-
-        try:
-            return User.objects.get(auth_token__key=token)
-        except User.DoesNotExist:
-            logger.warning('Request with bad token {0}'.format(token))
-
-
-class ChatSocketHandler(AuthMixin, websocket.WebSocketHandler):
-
-    waiters = set()
+class ChatSocketHandler(websocket.WebSocketHandler):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -72,14 +50,19 @@ class ChatSocketHandler(AuthMixin, websocket.WebSocketHandler):
 
         self.subscriber = SubscribeManager(tornadoredis.Client())
 
+    def get_current_user(self):
+        token = self.request.GET('token')
+        try:
+            return User.objects.get(auth_token__key=token)
+        except User.DoesNotExist:
+            return None
+
     def check_origin(self, origin):
         return True
 
     def open(self, *args, **kwargs):
 
-        token = kwargs.get('token')
-
-        self.user = self.get_user(token)
+        self.user = self.get_current_user()
 
         if not self.user:
             self.close()
