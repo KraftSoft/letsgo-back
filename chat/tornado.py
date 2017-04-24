@@ -148,5 +148,5 @@ class ChatSocketHandler(AuthMixin, websocket.WebSocketHandler):
             r.delete(self.session_key)
 
 application = Application([
-    ('/(?P<channel>\w+)/(?P<token>\w+)/', ChatSocketHandler),
+    ('chat/(?P<channel>\w+)/(?P<token>\w+)/', ChatSocketHandler),
 ])

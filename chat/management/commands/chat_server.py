@@ -22,7 +22,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.http_server = HTTPServer(application)
-        self.http_server.listen(8888, address="127.0.0.1")
+        self.http_server.listen(9000, address="127.0.0.1")
 
         # Init signals handler
         signal.signal(signal.SIGTERM, self.sig_handler)

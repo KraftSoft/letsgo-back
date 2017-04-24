@@ -1,7 +1,5 @@
 from django.core.management import BaseCommand
 from django.template.loader import render_to_string
-import subprocess
-import shlex
 from application.settings.base import BASE_DIR
 
 
