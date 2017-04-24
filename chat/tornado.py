@@ -47,11 +47,13 @@ class ChatSocketHandler(websocket.WebSocketHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.channel_name = ''  # Chat unique slug
+        self.session_key = None
+        self.user = None
 
         self.subscriber = SubscribeManager(tornadoredis.Client())
 
     def get_current_user(self):
-        token = self.request.GET('token')
+        token = self.get_argument('token')
         try:
             return User.objects.get(auth_token__key=token)
         except User.DoesNotExist:
@@ -124,12 +126,13 @@ class ChatSocketHandler(websocket.WebSocketHandler):
         pass
 
     def on_close(self):
-        r.delete(self.session_key)
+        if self.session_key:
+            r.delete(self.session_key)
 
     def __del__(self):
-        if r.get(self.session_key):
+        if self.session_key and r.get(self.session_key):
             r.delete(self.session_key)
 
 application = Application([
-    ('chat/(?P<channel>\w+)/(?P<token>\w+)/', ChatSocketHandler),
+    ('/chat/(?P<channel>\w+)/', ChatSocketHandler),
 ])
