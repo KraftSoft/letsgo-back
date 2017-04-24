@@ -117,7 +117,7 @@ class ChatSocketHandler(AuthMixin, websocket.WebSocketHandler):
         if result:
 
             http_client = AsyncHTTPClient()
-            url = build_absolute_url(':8080{0}'.format(reverse('save_message')))
+            url = build_absolute_url('{0}'.format(reverse('save_message')))
 
             request = HTTPRequest(
                 url,
