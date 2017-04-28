@@ -1,7 +1,5 @@
 from django.core.management import BaseCommand
 from django.template.loader import render_to_string
-import subprocess
-import shlex
 from application.settings.base import BASE_DIR
 
 
@@ -12,7 +10,7 @@ class Command(BaseCommand):
 
         context = {
             'project_name': 'letsgo',
-            'project_version': '1.0-9'
+            'project_version': '1.1-1'
         }
 
         postinst_tpl = 'debian/postinst.tpl'

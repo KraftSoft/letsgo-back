@@ -32,6 +32,5 @@ urlpatterns = [
 
     url(r'^unread-confirms/$', UnreadConfirms.as_view(), name='unread-confirms'),
 
-
 ]
 
