@@ -540,13 +540,6 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
 class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
     def setUp(self):
         super().setUp()
-        self.meeting_creator = client_creation('creator', 'lol')
-        self.meeting_id = self.create_meeting(1, 1, 'keklol', self.meeting_creator).data['id']
-        self.fst_successor = client_creation('fst_successor', 'lol')
-        self.snd_successor = client_creation('snd_successor', 'lol')
-        # 1st and 2nd clients trying to participate
-        self.fst_successor.post(reverse('meeting-confirm', kwargs={'pk': self.meeting_id}))
-        self.snd_successor.post(reverse('meeting-confirm', kwargs={'pk': self.meeting_id}))
 
     def test_list_confirms(self):
         creator_confirmations_r = self.meeting_creator.get(reverse('confirms-list'))
@@ -644,7 +637,6 @@ class UploadDeletePhotoTest(AuthUserMixin, TestCase):
     def create_photo(self, file_name):
         image = Image.new('RGBA', size=(50, 50), color=(150, 150, 0))
         image.save(file_name)
-
         response = self.client.put(
             reverse('upload-photo', kwargs={'filename': file_name}),
             data=image,

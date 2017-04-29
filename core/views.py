@@ -163,7 +163,7 @@ class FileUploadView(APIView):
         mime_type = magic.from_file(file_obj.name, mime=True)
 
         # file_obj.seek(0)
-        img = Image.open(StringIO(self.request.FILES['file'].read()))
+        # img = Image.open(StringIO(self.request.FILES['file'].read()))
 
         if not re.match('image/', mime_type):
             raise UploadException(
