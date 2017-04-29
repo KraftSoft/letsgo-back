@@ -29,6 +29,9 @@ from core.models import Meeting, UserPhotos, User
 from core.permissions import GeneralPermissionMixin
 from core.serializers import JsonResponseSerializer as JRS, AuthSerializer
 from core.utils import JsonResponse, build_absolute_url
+from PIL import Image
+from io import StringIO, BytesIO
+
 
 logger = logging.getLogger(__name__)
 
@@ -158,9 +161,20 @@ class FileUploadView(APIView):
     def check_mime_type(self, file_obj):
 
         mime_type = magic.from_file(file_obj.name, mime=True)
+
+        # file_obj.seek(0)
+        img = Image.open(StringIO(self.request.FILES['file'].read()))
+
         if not re.match('image/', mime_type):
             raise UploadException(
                 response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
+        img_format = mime_type.split('/')[1]
+        if img_format not in ALLOWABLE_FILE_FORMATS:
+            raise UploadException(
+                response=JsonResponse(status=400, msg='error wrong img format: "{}"'.format(img_format)))
+
+    def crop_if_needed(self, file_obj):
+        pass
         img_format = mime_type.split('/')[1]
         if img_format not in ALLOWABLE_FILE_FORMATS:
             raise UploadException(

@@ -1,8 +1,9 @@
-from core.models import User
+from core.models import User, Meeting
 from django.db import models
 
 
 class Confirm(models.Model):
+
     meeting = models.ForeignKey('core.Meeting', related_name='confirms')
     user = models.ForeignKey('core.User', related_name='confirms')
 
@@ -19,11 +20,16 @@ class Confirm(models.Model):
 
 class Chat(models.Model):
     title = models.CharField(max_length=32)
-    users = models.ManyToManyField(User)
+    owner = models.ForeignKey(User, related_name='my_own_chats')
+    users = models.ManyToManyField(User, related_name='chats_with_me')
+    meeting = models.ForeignKey(Meeting, related_name='chats')
+    channel_slug = models.CharField(max_length=128, unique=True, db_index=True)
 
 
 class Message(models.Model):
-    chat = models.ForeignKey(Chat)
-    author = models.ForeignKey(User)
+    chat = models.ForeignKey(Chat, related_name='messages')
+    author = models.ForeignKey(User, related_name='messages')
     text = models.TextField()
-    date_create = models.DateTimeField(auto_now=True)
+    is_read = models.BooleanField(default=False)
+    is_received = models.BooleanField(default=False)
+    date_create = models.DateTimeField(auto_now_add=True)

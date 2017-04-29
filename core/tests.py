@@ -159,6 +159,15 @@ class ConfirmMixin(MeetingMixin):
     def setUp(self):
         super().setUp()
         self.test_confirm = Confirm.objects.create(meeting=self.test_meeting_1, user=self.test_user)
+        self.test_confirm_1 = Confirm.objects.create(meeting=self.test_meeting_2, user=self.test_user)
+
+        self.meeting_creator = client_creation('creator', 'lol')
+        self.meeting_id = self.create_meeting(1, 1, 'keklol', self.meeting_creator).data['id']
+        self.fst_successor = client_creation('fst_successor', 'lol')
+        self.snd_successor = client_creation('snd_successor', 'lol')
+        # 1st and 2nd clients trying to participate
+        self.fst_successor.post(reverse('meeting-confirm', kwargs={'pk': self.meeting_id}))
+        self.snd_successor.post(reverse('meeting-confirm', kwargs={'pk': self.meeting_id}))
 
 
 class CreateUserTests(TestCase):
@@ -644,10 +653,17 @@ class UploadDeletePhotoTest(AuthUserMixin, TestCase):
         return response
 
     def test_upload__ok(self):
-        file_name = 'test.png.gif'
+        file_name = 'test.png.jpg'
         response = self.create_photo(file_name)
         data = response.data
         self.assertEqual(data['status'], 204)
+        os.remove(file_name)
+
+    def test_upload__notok(self):
+        file_name = 'test.png.gif'
+        response = self.create_photo(file_name)
+        data = response.data
+        self.assertEqual(data['status'], 400)
         os.remove(file_name)
 
     def test_delete(self):
