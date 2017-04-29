@@ -614,7 +614,7 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
 
     def test_count_confirms(self):
         resp = self.meeting_creator.get(reverse('unread-confirms'))
-        data = json.loads(resp.data['data'])
+        data = resp.data['data']
         self.assertEqual(data['unread'], 2)
 
 
@@ -644,10 +644,17 @@ class UploadDeletePhotoTest(AuthUserMixin, TestCase):
         return response
 
     def test_upload__ok(self):
-        file_name = 'test.jpeg'
+        file_name = 'test.png.jpg'
         response = self.create_photo(file_name)
         data = response.data
         self.assertEqual(data['status'], 204)
+        os.remove(file_name)
+
+    def test_upload__notok(self):
+        file_name = 'test.png.gif'
+        response = self.create_photo(file_name)
+        data = response.data
+        self.assertEqual(data['status'], 400)
         os.remove(file_name)
 
     def test_delete(self):
