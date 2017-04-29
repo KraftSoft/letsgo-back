@@ -156,3 +156,4 @@ TEMPLATE_DIRS = (
     BASE_DIR + '/../tpl/',
     BASE_DIR + '/../deploy_tools/tpl/'
 )
+

@@ -25,3 +25,5 @@ MEETING_CATEGORIES = {
     "dance": (3, u'танцы'),
 }
 
+TYPE_ONE_BY_ONE = 0
+TYPE_GROUP = 1
