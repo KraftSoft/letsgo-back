@@ -1,3 +1,4 @@
+import json
 import logging
 
 import tornadoredis
@@ -12,7 +13,8 @@ import redis
 
 from chat.models import Chat
 from core.models import User
-from core.utils import build_absolute_url
+from core.serializers import UserSerializer
+from core.utils import build_absolute_url, reverse_full
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +28,20 @@ class SubscribeManager(BaseSubscriber):
         if msg.kind == 'message' and msg.body:
             # Get the list of subscribers for this channel
             subscribers = list(self.subscribers[msg.channel].keys())
+
+            message = json.loads(msg.body)
+
             if subscribers:
-                # Use the first active subscriber/client connection
-                # for broadcasting. Thanks to Jonas Hagstedt
                 for s in subscribers:
                     if r.get(s.session_key):
-                        s.write_message(msg.body)
-                        break
+                        data = {
+                            'text': message['text'],
+                            'author_name': s.user.first_name,
+                            'avatar': s.user.get_avatar(),
+                            'href': reverse_full('user-detail', kwargs={'pk': s.user.id}),
+                            'is_my': message['user']['id'] == s.user.id
+                        }
+                        s.write_message(json.dumps(data, ensure_ascii=False))
                     else:
                         # TODO SEND PUSH
                         pass
@@ -40,6 +49,7 @@ class SubscribeManager(BaseSubscriber):
         super(SubscribeManager, self).on_message(msg)
 
 publisher = SubscribeManager(tornadoredis.Client())
+subscriber = SubscribeManager(tornadoredis.Client())
 
 
 class ChatSocketHandler(websocket.WebSocketHandler):
@@ -49,8 +59,6 @@ class ChatSocketHandler(websocket.WebSocketHandler):
         self.channel_name = ''  # Chat unique slug
         self.session_key = None
         self.user = None
-
-        self.subscriber = SubscribeManager(tornadoredis.Client())
 
     def get_current_user(self):
         token = self.get_argument('token')
@@ -91,11 +99,15 @@ class ChatSocketHandler(websocket.WebSocketHandler):
             self.close()
             return
 
-        self.subscriber.subscribe(self.channel_name, self)
+        subscriber.subscribe(self.channel_name, self)
 
     def on_message(self, message):
         self.message = message
-        publisher.publish(self.channel_name, message, callback=self.new_message_callback)
+        data = {
+            'text': message,
+            'user': UserSerializer(self.user).data
+        }
+        publisher.publish(self.channel_name, data, callback=self.new_message_callback)
 
     def new_message_callback(self, result):
 

@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField
 
 from chat.models import Message, Chat
 from core.serializers import UserSerializer
@@ -6,6 +7,10 @@ from core.serializers import UserSerializer
 
 class MessageSerializer(serializers.ModelSerializer):
     author = UserSerializer()
+    is_my = SerializerMethodField()
+
+    def get_is_my(self, obj):
+        return self.context['view'].request.user == obj.author
 
     class Meta:
         model = Message
@@ -24,4 +29,4 @@ class ChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Chat
-        fields = ('title', 'owner', 'users', 'channel_slug', 'last_message')
+        fields = ('id', 'title', 'owner', 'users', 'channel_slug', 'last_message')
