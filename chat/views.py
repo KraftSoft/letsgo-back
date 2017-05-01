@@ -22,6 +22,11 @@ class ChatsList(ChatMixin, ListAPIView):
         )
         return super().get(request, *args, **kwargs)
 
+    def get_serializer_context(self):
+        return {
+            'request': self.request
+        }
+
 
 class MessageList(MessageMixin, ListAPIView):
     def get(self, request, *args, **kwargs):

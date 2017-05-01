@@ -32,5 +32,7 @@ urlpatterns = [
 
     url(r'^unread-confirms/$', UnreadConfirms.as_view(), name='unread-confirms'),
 
+    url(r'^set-client-key/$', UnreadConfirms.as_view(), name='set-client-key'),
+
 ]
 

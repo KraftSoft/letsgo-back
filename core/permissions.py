@@ -54,4 +54,4 @@ class GeneralPermissionMixin(object):
         elif self.request.method == 'PUT':
             return [self.who_can_update()]  # only owners can update objects
         else:
-            return False
+            return [lambda: False]
