@@ -25,6 +25,7 @@ class IsStaffOrOwner(BasePermission):
         try:
             model = object_model.objects.get(pk=view.kwargs['pk'])
         except (object_model.DoesNotExist, KeyError):
+            logger.exception('User can not update data')
             return False
 
         try:

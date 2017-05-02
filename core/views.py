@@ -13,6 +13,7 @@ from rest_framework import generics
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view
+from rest_framework.exceptions import ValidationError
 from rest_framework.generics import UpdateAPIView, CreateAPIView, ListAPIView, DestroyAPIView
 from rest_framework.parsers import FileUploadParser
 from rest_framework.response import Response
@@ -27,7 +28,7 @@ from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin, ConfirmBasicMixin
 from core.models import Meeting, UserPhotos, User
 from core.permissions import GeneralPermissionMixin
-from core.serializers import JsonResponseSerializer as JRS, AuthSerializer
+from core.serializers import JsonResponseSerializer as JRS, AuthSerializer, UserSerializer
 from core.utils import JsonResponse, build_absolute_url
 
 logger = logging.getLogger(__name__)
@@ -49,9 +50,32 @@ class UserList(UserMixin, generics.ListCreateAPIView):
 
 class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestroyAPIView):
         def dispatch(self, request, *args, **kwargs):
-            if 'pk' not in self.kwargs:
-                self.kwargs['pk'] = request.user.pk
-            return super().dispatch(request, *args, **kwargs)
+            self.args = args
+            self.kwargs = kwargs
+            request = self.initialize_request(request, *args, **kwargs)
+            self.request = request
+            self.headers = self.default_response_headers  # deprecate?
+
+            if 'pk' not in kwargs:
+                kwargs['pk'] = request.user.pk
+
+            try:
+                self.initial(request, *args, **kwargs)
+
+                # Get the appropriate handler method
+                if request.method.lower() in self.http_method_names:
+                    handler = getattr(self, request.method.lower(),
+                                      self.http_method_not_allowed)
+                else:
+                    handler = self.http_method_not_allowed
+
+                response = handler(request, *args, **kwargs)
+
+            except Exception as exc:
+                response = self.handle_exception(exc)
+
+            self.response = self.finalize_response(request, response, *args, **kwargs)
+            return self.response
 
         def get(self, request, *args, **kwargs):
             try:
@@ -59,6 +83,12 @@ class UserDetail(GeneralPermissionMixin, UserMixin, generics.RetrieveUpdateDestr
             except User.DoesNotExist:
                 return Response(JRS(JsonResponse(
                     status=400, msg='User does not exist')).data)
+
+        def put(self, request, *args, **kwargs):
+            try:
+                return super().put(request, *args, **kwargs)
+            except ValidationError as e:
+                return Response(JRS(JsonResponse(status=400, msg='error', data=e.detail)).data)
 
 
 class MeetingsList(GeneralPermissionMixin, MeetingMixin, generics.ListCreateAPIView):
@@ -318,3 +348,16 @@ class UnreadConfirms(GeneralPermissionMixin, ListAPIView):
         answer = {"unread": count}
         json_data = json.dumps(answer)
         return Response(JRS(JsonResponse(status=200, msg='ok', data=json_data)).data)
+
+
+class UpdateClientKey(UpdateAPIView):
+
+    def update(self, request, *args, **kwargs):
+        if 'client_key' in self.request.data:
+            self.request.user.client_key = self.request.data['client_key']
+            self.request.user.save()
+
+            return Response(JRS(JsonResponse(status=200, msg='ok', data=UserSerializer(self.request.user).data)).data)
+        else:
+            return Response(JRS(JsonResponse(status=400, msg='error', data={
+                'error: it is need to provide `client_key` param'})).data)

@@ -12,6 +12,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = tuple()
     birth_date = models.DateField(null=True, blank=False)
     gender = models.SmallIntegerField(null=True, blank=False)
+    client_key = models.CharField(max_length=256, null=False, blank=False)
 
     def get_avatar(self):
 
