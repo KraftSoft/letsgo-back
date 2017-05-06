@@ -372,7 +372,6 @@ class UnreadConfirms(GeneralPermissionMixin, ListAPIView):
     def get(self, request, *args, **kwargs):
         count = Confirm.objects.filter(meeting__owner=request.user, is_read=False).count()
         answer = {"unread": count}
-        # json_data = json.dumps(answer)
         return Response(JRS(JsonResponse(status=200, msg='ok', data=answer)).data)
 
 
