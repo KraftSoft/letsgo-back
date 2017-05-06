@@ -185,6 +185,7 @@ class FileUploadView(APIView):
     view_context = {}
 
     def crop_image(self, filename, file_obj):
+        file_obj.seek(0)
         image = Image.open(BytesIO(file_obj.read()))
         size = image.size
         min_size = min(size)
@@ -204,9 +205,7 @@ class FileUploadView(APIView):
 
     def check_mime_type(self, file_obj):
 
-        # mime_type = magic.from_file(file_obj.name, mime=True)
-        mime_type = magic.from_buffer(file_obj.read(), mime=True)
-        file_obj.seek(0)
+        mime_type = magic.from_file(file_obj.name, mime=True)
         if not re.match('image/', mime_type):
             raise UploadException(
                 response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
