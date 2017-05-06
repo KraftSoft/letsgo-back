@@ -22,7 +22,7 @@ from rest_framework.views import APIView
 
 from chat.models import Confirm
 from core.constants import BASE_ERROR_MSG, MAX_MEETINGS,\
-    MOSCOW_LAT, MOSCOW_LNG, MAX_RADIUS, MEETING_CATEGORIES, MALE, FEMALE
+    MOSCOW_LAT, MOSCOW_LNG, MAX_RADIUS, MEETING_CATEGORIES, MALE, FEMALE, ALLOWABLE_FILE_FORMATS
 
 from core.exceptions import UploadException
 from core.mixins import UserMixin, MeetingMixin, PhotoMixin, ConfirmMixin, ConfirmBasicMixin
@@ -32,6 +32,7 @@ from core.serializers import JsonResponseSerializer as JRS, AuthSerializer, User
 from core.utils import JsonResponse, build_absolute_url
 from PIL import Image
 from io import StringIO, BytesIO
+
 logger = logging.getLogger(__name__)
 
 
@@ -183,8 +184,8 @@ class FileUploadView(APIView):
     view_context = {}
 
     def convert_to_pil(self, filename, file_obj):
-        image = Image.open(StringIO(file_obj.read()))
-        kek = 1
+        image = Image.open(BytesIO(file_obj.read()))
+        return image
 
     def validate_request(self):
         if 'file' not in self.request.data:
