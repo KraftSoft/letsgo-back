@@ -32,6 +32,7 @@ from core.serializers import JsonResponseSerializer as JRS, AuthSerializer, User
 from core.utils import JsonResponse, build_absolute_url
 from PIL import Image
 from io import StringIO, BytesIO
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 logger = logging.getLogger(__name__)
 
@@ -188,8 +189,14 @@ class FileUploadView(APIView):
         size = image.size
         min_size = min(size)
         image = image.crop((0, 0, min_size, min_size))
-        image.save("/home/nikita/kek.jpg", "jpeg")
-        return image
+        # image.save("/home/nikita/kek.jpg", "jpeg")
+        image_io = BytesIO()
+        image.save(image_io, format='JPEG')
+        image_io.seek(0)
+        file = InMemoryUploadedFile(image_io, None, 'foo.jpg', 'image/jpeg',
+                                    image_io.getbuffer().nbytes, None)
+
+        return file
 
     def validate_request(self):
         if 'file' not in self.request.data:
@@ -197,11 +204,9 @@ class FileUploadView(APIView):
 
     def check_mime_type(self, file_obj):
 
-        mime_type = magic.from_file(file_obj.name, mime=True)
-
-        # file_obj.seek(0)
-        img = Image.open(StringIO(self.request.FILES['file'].read()))
-
+        # mime_type = magic.from_file(file_obj.name, mime=True)
+        mime_type = magic.from_buffer(file_obj.read(), mime=True)
+        file_obj.seek(0)
         if not re.match('image/', mime_type):
             raise UploadException(
                 response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
@@ -238,8 +243,9 @@ class FileUploadView(APIView):
         try:
             self.validate_request()
             file_obj = request.data['file']
-            image = self.crop_image(filename, file_obj)
-            self.save_file(filename, file_obj)
+            self.check_mime_type(file_obj)
+            image_file = self.crop_image(filename, file_obj)
+            self.save_file(filename, image_file)
 
         except UploadException as e:
             return Response(JRS(e.response).data)
