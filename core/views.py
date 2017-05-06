@@ -183,8 +183,12 @@ class FileUploadView(APIView):
 
     view_context = {}
 
-    def convert_to_pil(self, filename, file_obj):
+    def crop_image(self, filename, file_obj):
         image = Image.open(BytesIO(file_obj.read()))
+        size = image.size
+        min_size = min(size)
+        image = image.crop((0, 0, min_size, min_size))
+        image.save("/home/nikita/kek.jpg", "jpeg")
         return image
 
     def validate_request(self):
@@ -234,7 +238,7 @@ class FileUploadView(APIView):
         try:
             self.validate_request()
             file_obj = request.data['file']
-            image = self.convert_to_pil(filename, file_obj)
+            image = self.crop_image(filename, file_obj)
             self.save_file(filename, file_obj)
 
         except UploadException as e:
