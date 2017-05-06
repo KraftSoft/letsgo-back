@@ -185,17 +185,23 @@ class FileUploadView(APIView):
     view_context = {}
 
     def crop_image(self, filename, file_obj):
-        file_obj.seek(0)
-        image = Image.open(BytesIO(file_obj.read()))
-        size = image.size
-        min_size = min(size)
-        image = image.crop((0, 0, min_size, min_size))
-        # image.save("/home/nikita/kek.jpg", "jpeg")
-        image_io = BytesIO()
-        image.save(image_io, format='JPEG')
-        image_io.seek(0)
-        file = InMemoryUploadedFile(image_io, None, 'foo.jpg', 'image/jpeg',
-                                    image_io.getbuffer().nbytes, None)
+        try:
+            file_obj.seek(0)
+            image = Image.open(BytesIO(file_obj.read()))
+            size = image.size
+            if size[0] == size[1]:
+                return file_obj
+            min_size = min(size)
+            image = image.crop((0, 0, min_size, min_size))
+            image_io = BytesIO()
+            image.save(image_io, format='JPEG')
+            image_io.seek(0)
+            file = InMemoryUploadedFile(image_io, None, 'foo.jpg', 'image/jpeg',
+                                        image_io.getbuffer().nbytes, None)
+
+        except IOError as e:
+            return Response(JRS(JsonResponse(status=400,
+                            msg='something wrong with reading file')).data)
 
         return file
 
@@ -213,9 +219,6 @@ class FileUploadView(APIView):
         if img_format not in ALLOWABLE_FILE_FORMATS:
             raise UploadException(
                 response=JsonResponse(status=400, msg='error wrong img format: "{}"'.format(img_format)))
-
-    def crop_if_needed(self, file_obj):
-        pass
 
     def save_file(self, filename, file_obj):
 
