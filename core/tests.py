@@ -67,7 +67,7 @@ def check_json(data, fields):
 class AuthUserMixin(object):
     def setUp(self):
         self.test_user = User.objects.create(username=TEST_USER_1,
-                                             birth_date=DEFAULT_BIRTH_DATE, gender=FEMALE)
+                                             birth_date=DEFAULT_BIRTH_DATE, gender=FEMALE, client_key='qwerty123')
         self.test_user.set_password(TEST_USER_PW_1)
         self.test_user.save()
 
@@ -442,13 +442,15 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
     def test_update_user(self):
         NEW_ABOUT = 'bla bla bla'
         NEW_FN = 'Юля'
+        NEW_KEY = 'qwerty1234'
         response = self.client.put(
             reverse('user-detail', kwargs={'pk': self.test_user.pk}),
             json.dumps({
                 'about': NEW_ABOUT,
                 'first_name': NEW_FN,
                 'gender': FEMALE,
-                'birth_date': DEFAULT_BIRTH_DATE.isoformat()
+                'birth_date': DEFAULT_BIRTH_DATE.isoformat(),
+                'client_key': NEW_KEY
             }),
             content_type='application/json',
         )

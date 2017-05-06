@@ -33,7 +33,7 @@ class SmartUpdaterMixin(object):
 
 class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
 
-    UPDATE_AVAILABLE_FIELDS = ('first_name', 'about', 'gender', 'birth_date')
+    UPDATE_AVAILABLE_FIELDS = ('first_name', 'about', 'gender', 'birth_date', 'client_key')
     avatar = SerializerMethodField()
     href = SerializerMethodField()
     birth_date = serializers.DateField(required=True)
@@ -48,7 +48,7 @@ class UserSerializer(SmartUpdaterMixin, serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'gender', 'birth_date',
-                  'first_name', 'about', 'password', 'avatar', 'href')
+                  'first_name', 'about', 'password', 'avatar', 'href', 'client_key')
 
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},
@@ -97,7 +97,7 @@ class UserSerializerExtended(UserSerializer):
     class Meta:
         model = User
         fields = ('id', 'first_name', 'about', 'birth_date', 'gender',
-                  'password', 'avatar', 'photos', 'href')
+                  'password', 'avatar', 'photos', 'href', 'client_key')
 
         extra_kwargs = {
             'password': {'write_only': True, 'required': False},

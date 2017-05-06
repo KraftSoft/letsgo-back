@@ -20,7 +20,7 @@ from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 
 from chat.models import Confirm
-from core.constants import ALLOWABLE_FILE_FORMATS, BASE_ERROR_MSG, MAX_MEETINGS, \
+from core.constants import BASE_ERROR_MSG, MAX_MEETINGS,\
     MOSCOW_LAT, MOSCOW_LNG, MAX_RADIUS, MEETING_CATEGORIES, MALE, FEMALE
 
 from core.exceptions import UploadException
@@ -31,8 +31,6 @@ from core.serializers import JsonResponseSerializer as JRS, AuthSerializer
 from core.utils import JsonResponse, build_absolute_url
 from PIL import Image
 from io import StringIO, BytesIO
-
-
 logger = logging.getLogger(__name__)
 
 
@@ -154,6 +152,10 @@ class FileUploadView(APIView):
 
     view_context = {}
 
+    def convert_to_pil(self, filename, file_obj):
+        image = Image.open(StringIO(file_obj.read()))
+        kek = 1
+
     def validate_request(self):
         if 'file' not in self.request.data:
             raise UploadException(response=JsonResponse(status=400, msg='error: no file in request'))
@@ -161,27 +163,11 @@ class FileUploadView(APIView):
     def check_mime_type(self, file_obj):
 
         mime_type = magic.from_file(file_obj.name, mime=True)
-
-        # file_obj.seek(0)
-        # img = Image.open(StringIO(self.request.FILES['file'].read()))
-
         if not re.match('image/', mime_type):
             raise UploadException(
                 response=JsonResponse(status=400, msg='error wrong file mime type: "{}"'.format(mime_type)))
-        img_format = mime_type.split('/')[1]
-        if img_format not in ALLOWABLE_FILE_FORMATS:
-            raise UploadException(
-                response=JsonResponse(status=400, msg='error wrong img format: "{}"'.format(img_format)))
-
-    def crop_if_needed(self, file_obj):
-        pass
-        img_format = mime_type.split('/')[1]
-        if img_format not in ALLOWABLE_FILE_FORMATS:
-            raise UploadException(
-                response=JsonResponse(status=400, msg='error wrong img format: "{}"'.format(img_format)))
 
     def save_file(self, filename, file_obj):
-
         local_path = '{0}/{1}'.format(self.url_prefix, filename)
         self.view_context['path'] = '{0}{1}'.format(settings.MEDIA_URL, self.storage.save(local_path, file_obj))
 
@@ -205,9 +191,7 @@ class FileUploadView(APIView):
         try:
             self.validate_request()
             file_obj = request.data['file']
-            # допилить
-            self.check_mime_type(file_obj)
-
+            image = self.convert_to_pil(filename, file_obj)
             self.save_file(filename, file_obj)
 
         except UploadException as e:
@@ -336,4 +320,5 @@ class UnreadConfirms(GeneralPermissionMixin, ListAPIView):
     def get(self, request, *args, **kwargs):
         count = Confirm.objects.filter(meeting__owner=request.user, is_read=False).count()
         answer = {"unread": count}
-        return Response(JRS(JsonResponse(status=200, msg='ok', data=answer)).data)
+        json_data = json.dumps(answer)
+        return Response(JRS(JsonResponse(status=200, msg='ok', data=json_data)).data)

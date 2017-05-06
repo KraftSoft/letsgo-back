@@ -84,11 +84,15 @@ http 37.46.128.134/meetings-list/ 'Authorization: Token 163df7faa712e242f7e6b4d2
     "username": "new_nick",
     "firs_name": "new first name",
     "about": "new about"
+    "client_key": "client key for FireBase"
 }
 ```
 
-`curl -H "Content-Type: application/json" -H "Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2" -X PUT -d '{"username": "new_nick", "firs_name": "new first name", "about": "new about"}' 37.46.128.134/user-detail/1/`
-
+```curl -H "Content-Type: application/json" -H "Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2" -X PUT -d '{"username": "new_nick", "firs_name": "new first name", "about": "new about", "client_key": "990ee"}' 37.46.128.134/user-detail/1/```<br/>
+<br/>
+или
+<br/>
+```http PUT 37.46.128.134/user-detail/  'Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2' client_key=990ee birth_date=2000-10-10 gender=0 first_name=Papa```
 
 Загрузка фото
 -------------
@@ -185,3 +189,8 @@ http 37.46.128.134/message-list/1/ 'Authorization: Token ac67fd83a6f89343ab0002b
 токен пользователя в GET  параметре (оказалось у вебсокетов есть ограничения на заголовки)
 
 Далее все как в обычной работе с сокетами, вешаем события on_open, on_message, on_close
+
+
+Установка client_id для FireBase
+--------------------------------
+http PUT 127.0.0.1:8080/set-client-key/  'Authorization: Token 163df7faa712e242f7e6b4d270e29401e604b9b2' client_key=qwert1234

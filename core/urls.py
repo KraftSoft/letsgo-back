@@ -1,7 +1,7 @@
 from django.conf.urls import url
 
 from core.views import UserList, UserDetail, MeetingsList, MeetingDetail, AuthView, FileUploadView, SetAvatar, \
-    ConfirmCreate, ConfirmsList, AcceptConfirm, DeletePhoto, MeetingTypes, UnreadConfirms
+    ConfirmCreate, ConfirmsList, AcceptConfirm, DeletePhoto, MeetingTypes, UnreadConfirms, UpdateClientKey
 
 urlpatterns = [
 
@@ -31,6 +31,8 @@ urlpatterns = [
     url(r'^meeting-types/$', MeetingTypes.as_view(), name='meeting-types'),
 
     url(r'^unread-confirms/$', UnreadConfirms.as_view(), name='unread-confirms'),
+
+    url(r'^set-client-key/$', UpdateClientKey.as_view(), name='set-client-key'),
 
 ]
 

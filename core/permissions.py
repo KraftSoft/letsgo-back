@@ -25,6 +25,7 @@ class IsStaffOrOwner(BasePermission):
         try:
             model = object_model.objects.get(pk=view.kwargs['pk'])
         except (object_model.DoesNotExist, KeyError):
+            logger.exception('User can not update data')
             return False
 
         try:
@@ -54,4 +55,4 @@ class GeneralPermissionMixin(object):
         elif self.request.method == 'PUT':
             return [self.who_can_update()]  # only owners can update objects
         else:
-            return False
+            return [lambda: False]

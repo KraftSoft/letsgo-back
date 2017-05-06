@@ -1,5 +1,5 @@
+import datetime
 import signal
-import time
 
 from django.core.management import BaseCommand
 from tornado.httpserver import HTTPServer
@@ -18,7 +18,7 @@ class Command(BaseCommand):
         self.http_server.stop()
 
         io_loop = IOLoop.instance()
-        io_loop.add_timeout(time.time() + 2, io_loop.stop)
+        io_loop.add_timeout(datetime.timedelta(seconds=600), io_loop.stop)
 
     def handle(self, *args, **options):
         self.http_server = HTTPServer(application)
