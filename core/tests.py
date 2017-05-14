@@ -540,6 +540,8 @@ class UpdateMeetingCases(MeetingMixin, TransactionTestCase):
 
 
 class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
+    def setUp(self):
+        super().setUp()
 
     def test_list_confirms(self):
         creator_confirmations_r = self.meeting_creator.get(reverse('confirms-list'))
@@ -556,7 +558,7 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
 
     def test_proper_color_serialization(self):
         confirmed_conf = Confirm.objects.all().filter(user__username='fst_successor')
-        self.meeting_creator.put(
+        response = self.meeting_creator.put(
             reverse('confirm-action', kwargs={'pk': confirmed_conf[0].id}),
             json.dumps({
                 'is_approved': True,
@@ -570,7 +572,6 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
 
         data = meetings.data
         self.assertEqual(data[0]['color_status'], APPROVED)
-
         meetings = self.snd_successor.get(reverse('meetings-list') + "?lng={0}&lat={1}&r={2}".format(1, 1, 10))
         data = meetings.data
         self.assertEqual(data[0]['color_status'], DISAPPROVED)
@@ -617,7 +618,7 @@ class ConfirmCases(ConfirmMixin, MeetingMixin, TransactionTestCase):
 
     def test_count_confirms(self):
         resp = self.meeting_creator.get(reverse('unread-confirms'))
-        data = json.loads(resp.data['data'])
+        data = resp.data['data']
         self.assertEqual(data['unread'], 2)
 
 
@@ -638,19 +639,25 @@ class UploadDeletePhotoTest(AuthUserMixin, TestCase):
     def create_photo(self, file_name):
         image = Image.new('RGBA', size=(50, 50), color=(150, 150, 0))
         image.save(file_name)
-
         response = self.client.put(
             reverse('upload-photo', kwargs={'filename': file_name}),
             data=image,
-            content_type='image/jpeg'
+            content_type='image/'
         )
         return response
 
     def test_upload__ok(self):
-        file_name = 'test.jpeg'
+        file_name = 'test.png.jpg'
         response = self.create_photo(file_name)
         data = response.data
         self.assertEqual(data['status'], 204)
+        os.remove(file_name)
+
+    def test_upload__notok(self):
+        file_name = 'test.png.gif'
+        response = self.create_photo(file_name)
+        data = response.data
+        self.assertEqual(data['status'], 400)
         os.remove(file_name)
 
     def test_delete(self):
